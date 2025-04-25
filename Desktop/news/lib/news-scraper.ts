@@ -156,26 +156,32 @@ function determineCategoryFromItem(item: any): string {
   return "general"
 }
 
-// Update the fetchRssWithFetch function to better handle errors
+// Update the fetchRssWithFetch function to better handle errors and support timeout using AbortController
 async function fetchRssWithFetch(url: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10 seconds
   try {
     const response = await fetch(url, {
-      timeout: 10000, // Add timeout to prevent hanging requests
+      signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; NaijaNewsBot/1.0)",
       },
-    })
-
+    });
+    clearTimeout(timeout);
     if (!response.ok) {
-      console.warn(`Failed to fetch RSS feed: ${response.status} ${response.statusText} for ${url}`)
-      return null
+      console.warn(`Failed to fetch RSS feed: ${response.status} ${response.statusText} for ${url}`);
+      return null;
     }
-
-    const text = await response.text()
-    return await parser.parseString(text)
+    const text = await response.text();
+    return await parser.parseString(text);
   } catch (error) {
-    console.error(`Error fetching RSS feed from ${url}:`, error)
-    return null
+    clearTimeout(timeout);
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error(`Fetch for ${url} timed out.`);
+    } else {
+      console.error(`Error fetching RSS feed from ${url}:`, error);
+    }
+    return null;
   }
 }
 
@@ -331,17 +337,37 @@ export async function fetchAllNews(): Promise<NewsItem[]> {
 
 // Function to normalize news data
 export async function normalizeNewsData(rawNews: NewsItem[]): Promise<NewsItem[]> {
-  // Clean and normalize the data from different sources
-  return rawNews.map((item) => ({
-    ...item,
-    title: item.title.trim(),
-    summary:
-      item.summary
-        .trim()
-        .replace(/<[^>]*>?/gm, "")
-        .substring(0, 200) + (item.summary.length > 200 ? "..." : ""),
-    imageUrl: item.imageUrl || "/placeholder.svg?height=400&width=600",
-  }))
+  // List of Nigerian sources only
+  const nigerianSources = [
+    "The Guardian Nigeria",
+    "Punch",
+    "Vanguard",
+    "Premium Times",
+    "Channels TV",
+    "ThisDay",
+    "Daily Trust",
+  ];
+  // Clean, normalize, and filter the data
+  return rawNews
+    .filter(
+      (item) =>
+        nigerianSources.includes(item.sourceName) &&
+        item.summary &&
+        item.summary.trim() !== "" &&
+        item.summary.trim().toLowerCase() !== "no summary available" &&
+        item.imageUrl &&
+        item.imageUrl.trim() !== ""
+    )
+    .map((item) => ({
+      ...item,
+      title: item.title.trim(),
+      summary:
+        item.summary
+          .trim()
+          .replace(/<[^>]*>?/gm, "")
+          .substring(0, 200) + (item.summary.length > 200 ? "..." : ""),
+      imageUrl: item.imageUrl,
+    }));
 }
 
 // Function to categorize news
