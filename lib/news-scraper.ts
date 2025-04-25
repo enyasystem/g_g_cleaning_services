@@ -41,11 +41,6 @@ const NEWS_SOURCES = {
     url: "https://www.channelstv.com/feed/",
     type: "rss",
   },
-  cnn: {
-    name: "CNN Africa",
-    url: "http://rss.cnn.com/rss/edition_africa.rss",
-    type: "rss",
-  },
   bbcPidgin: {
     name: "BBC Pidgin",
     url: "https://feeds.bbci.co.uk/pidgin/rss.xml",
@@ -156,26 +151,32 @@ function determineCategoryFromItem(item: any): string {
   return "general"
 }
 
-// Update the fetchRssWithFetch function to better handle errors
+// Update the fetchRssWithFetch function to use AbortController for timeout
 async function fetchRssWithFetch(url: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10 seconds
   try {
     const response = await fetch(url, {
-      timeout: 10000, // Add timeout to prevent hanging requests
+      signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; NaijaNewsBot/1.0)",
       },
-    })
-
+    });
+    clearTimeout(timeout);
     if (!response.ok) {
-      console.warn(`Failed to fetch RSS feed: ${response.status} ${response.statusText} for ${url}`)
-      return null
+      console.warn(`Failed to fetch RSS feed: ${response.status} ${response.statusText} for ${url}`);
+      return null;
     }
-
-    const text = await response.text()
-    return await parser.parseString(text)
+    const text = await response.text();
+    return await parser.parseString(text);
   } catch (error) {
-    console.error(`Error fetching RSS feed from ${url}:`, error)
-    return null
+    clearTimeout(timeout);
+    if (error instanceof Error && error.name === "AbortError") {
+      console.error(`Fetch for ${url} timed out.`);
+    } else {
+      console.error(`Error fetching RSS feed from ${url}:`, error);
+    }
+    return null;
   }
 }
 
@@ -212,7 +213,7 @@ export async function fetchRssFeed(source: keyof typeof NEWS_SOURCES): Promise<N
       return {
         id: item.guid || uuidv4(),
         title: item.title || "No Title",
-        summary: item.contentSnippet || item.summary || "No summary available",
+        summary: item.contentSnippet || item.summary || "No summary for this Nigerian or BBC Pidgin news item.",
         imageUrl,
         sourceUrl: item.link || "",
         sourceName: NEWS_SOURCES[source].name,
@@ -257,7 +258,7 @@ export async function scrapeNews(source: keyof typeof NEWS_SOURCES): Promise<New
           newsItems.push({
             id: uuidv4(),
             title,
-            summary: summary || "No summary available",
+            summary: summary || "No summary for this Nigerian or BBC Pidgin news item.",
             imageUrl,
             sourceUrl: link.startsWith("http") ? link : `https://guardian.ng${link}`,
             sourceName: NEWS_SOURCES[source].name,
@@ -573,32 +574,9 @@ export const MOCK_NEWS: NewsItem[] = [
     category: "business",
     publishedAt: new Date(Date.now() - 54000000).toISOString(), // 15 hours ago
   },
-  // CNN Africa mock news
-  {
-    id: "16",
-    title: "African Leaders Meet to Discuss Continental Free Trade Agreement",
-    summary:
-      "Leaders from across Africa have gathered to discuss the implementation of the African Continental Free Trade Agreement (AfCFTA).",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://edition.cnn.com/africa/african-leaders-meet-to-discuss-free-trade",
-    sourceName: "CNN Africa",
-    category: "politics",
-    publishedAt: new Date(Date.now() - 5400000).toISOString(), // 1.5 hours ago
-  },
-  {
-    id: "17",
-    title: "New Study Shows Rapid Growth in African Tech Ecosystem",
-    summary:
-      "A new study by CNN Africa reveals the rapid growth of technology startups across the continent, with Nigeria leading the way.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://edition.cnn.com/africa/rapid-growth-in-african-tech-ecosystem",
-    sourceName: "CNN Africa",
-    category: "tech",
-    publishedAt: new Date(Date.now() - 9000000).toISOString(), // 2.5 hours ago
-  },
   // BBC Pidgin mock news
   {
-    id: "18",
+    id: "16",
     title: "How Nigeria New Minimum Wage Go Affect Workers",
     summary:
       "BBC Pidgin don look how di new minimum wage wey Nigeria government approve go affect workers for di kontri.",
@@ -609,7 +587,7 @@ export const MOCK_NEWS: NewsItem[] = [
     publishedAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
   },
   {
-    id: "19",
+    id: "17",
     title: "Afrobeats Stars Wey Dey Dominate Global Music Charts",
     summary: "See di Nigerian Afrobeats stars wey dey make waves for international music charts with dia latest songs.",
     imageUrl: "/placeholder.svg?height=400&width=600",
@@ -620,7 +598,7 @@ export const MOCK_NEWS: NewsItem[] = [
   },
   // ThisDay mock news
   {
-    id: "20",
+    id: "18",
     title: "Nigeria's Oil Production Increases by 20% in Q2",
     summary:
       "Nigeria has recorded a significant increase in oil production in the second quarter of the year, according to NNPC reports.",
@@ -632,7 +610,7 @@ export const MOCK_NEWS: NewsItem[] = [
   },
   // Daily Trust mock news
   {
-    id: "21",
+    id: "19",
     title: "Northern Governors Forum Addresses Security Challenges",
     summary:
       "The Northern Governors Forum has met to address the security challenges facing the northern region of Nigeria.",
