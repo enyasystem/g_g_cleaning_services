@@ -1,5 +1,5 @@
 import type { NewsItem } from "@/components/news-card"
-import { processAllNews, MOCK_NEWS, categorizeNews } from "@/lib/news-scraper"
+import { processAllNews, categorizeNews } from "@/lib/news-scraper"
 
 // Cache for news data to avoid too many API calls
 let newsCache: {

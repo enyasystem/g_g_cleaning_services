@@ -3,21 +3,21 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { AlertTriangle } from "lucide-react"
-import { fetchAllNews } from "@/lib/news-scraper"
+import { fetchTrendingNews } from "@/lib/news-fetcher"
 
 export default function BreakingNewsBar() {
   const [news, setNews] = useState<any[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Fetch news headlines in real time (poll every 60 seconds)
+  // Fetch trending news headlines in real time (poll every 60 seconds)
   useEffect(() => {
     let isMounted = true
     const fetchNews = async () => {
       try {
-        const allNews = await fetchAllNews()
+        const trending = await fetchTrendingNews(3)
         // Sort by publishedAt (latest first)
-        const sorted = allNews
+        const sorted = trending
           .filter((n: any) => n.publishedAt)
           .sort((a: any, b: any) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
         if (isMounted) setNews(sorted)
