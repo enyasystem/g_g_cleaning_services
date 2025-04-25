@@ -104,26 +104,23 @@ function determineCategoryFromItem(item: any): string {
   const categories = item.categories || []
   const content = (item.content || "").toLowerCase()
 
-  // Expanded category map with more keywords
+  // Check if categories array contains any of our predefined categories
   const categoryMap: Record<string, string[]> = {
-    politics: [
-      "politics", "government", "election", "president", "minister", "senate", "parliament", "governor", "assembly", "law", "policy", "court", "justice", "democracy", "campaign", "vote", "political", "party"
-    ],
-    entertainment: [
-      "entertainment", "music", "movie", "celebrity", "film", "actor", "actress", "nollywood", "award", "album", "song", "concert", "show", "star", "artist", "comedy", "festival"
-    ],
+    politics: ["politics", "government", "election", "president", "minister", "senate", "parliament"],
+    entertainment: ["entertainment", "music", "movie", "celebrity", "film", "actor", "actress", "nollywood"],
     sports: [
-      "sports", "football", "soccer", "basketball", "tennis", "athlete", "tournament", "championship", "super eagles", "match", "goal", "league", "cup", "olympic", "coach", "player"
+      "sports",
+      "football",
+      "soccer",
+      "basketball",
+      "tennis",
+      "athlete",
+      "tournament",
+      "championship",
+      "super eagles",
     ],
-    tech: [
-      "tech", "technology", "digital", "software", "hardware", "internet", "app", "computer", "smartphone", "startup", "innovation", "ai", "robot", "gadget", "device", "cyber"
-    ],
-    business: [
-      "business", "economy", "finance", "market", "stock", "trade", "investment", "banking", "naira", "cbn", "company", "industry", "entrepreneur", "revenue", "profit", "loss", "inflation"
-    ],
-    crime: [
-      "crime", "kidnap", "kidnapping", "abduct", "abduction", "robbery", "theft", "murder", "attack", "bandit", "banditry", "police", "security", "prison", "court", "arrest", "violence", "priest", "church", "gunmen", "assault", "rape", "fraud", "scam", "homicide", "suspect", "victim"
-    ],
+    tech: ["tech", "technology", "digital", "software", "hardware", "internet", "app", "computer", "smartphone"],
+    business: ["business", "economy", "finance", "market", "stock", "trade", "investment", "banking", "naira"],
   }
 
   // Check categories first
@@ -152,6 +149,39 @@ function determineCategoryFromItem(item: any): string {
 
   // Default category
   return "general"
+}
+
+// Helper to ensure a link is absolute and valid
+function getAbsoluteUrl(link: string, base: string): string {
+  try {
+    if (!link) return ""
+    const url = new URL(link, base)
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return url.href
+    }
+    return ""
+  } catch {
+    return ""
+  }
+}
+
+// Helper to fetch canonical/og:url from an article page
+async function fetchCanonicalUrl(articleUrl: string): Promise<string> {
+  try {
+    const res = await fetch(articleUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NaijaNewsBot/1.0)' } })
+    if (!res.ok) return articleUrl
+    const html = await res.text()
+    const $ = cheerio.load(html)
+    // Try og:url first
+    const ogUrl = $('meta[property="og:url"]').attr('content')
+    if (ogUrl && (ogUrl.startsWith('http://') || ogUrl.startsWith('https://'))) return ogUrl
+    // Try canonical
+    const canonical = $('link[rel="canonical"]').attr('href')
+    if (canonical && (canonical.startsWith('http://') || canonical.startsWith('https://'))) return canonical
+    return articleUrl
+  } catch {
+    return articleUrl
+  }
 }
 
 // Update the fetchRssWithFetch function to use AbortController for timeout
@@ -188,20 +218,13 @@ export async function fetchRssFeed(source: keyof typeof NEWS_SOURCES): Promise<N
   try {
     console.log(`Fetching RSS feed from ${NEWS_SOURCES[source].name} (${NEWS_SOURCES[source].url})`)
 
-    // In the preview environment, we can't make HTTP requests
-    // Return mock data filtered by source
-    if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-      console.log("Using mock data for preview environment")
-      return MOCK_NEWS.filter((item) => item.sourceName.includes(NEWS_SOURCES[source].name.split(" ")[0]))
-    }
-
     // Use fetch API instead of https.get
     const feed = await fetchRssWithFetch(NEWS_SOURCES[source].url)
 
-    // If feed is null (fetch failed), return mock data for this source
+    // If feed is null (fetch failed), return empty array
     if (!feed) {
-      console.warn(`Failed to fetch RSS feed from ${source}, using mock data instead`)
-      return MOCK_NEWS.filter((item) => item.sourceName.includes(NEWS_SOURCES[source].name.split(" ")[0]))
+      console.warn(`Failed to fetch RSS feed from ${source}`)
+      return []
     }
 
     if (!feed.items || feed.items.length === 0) {
@@ -209,86 +232,155 @@ export async function fetchRssFeed(source: keyof typeof NEWS_SOURCES): Promise<N
       return []
     }
 
-    return feed.items.map((item) => {
+    const items = await Promise.all(feed.items.map(async (item) => {
       const imageUrl = extractImageFromItem(item)
       const category = determineCategoryFromItem(item)
-
+      const rawLink = item.link || ""
+      let sourceUrl = getAbsoluteUrl(rawLink, NEWS_SOURCES[source].url.replace(/\/feed.*/, "/"))
+      // Fetch canonical/og:url for all sources if possible
+      if (sourceUrl) {
+        sourceUrl = await fetchCanonicalUrl(sourceUrl)
+      }
       return {
         id: item.guid || uuidv4(),
         title: item.title || "No Title",
-        summary: item.contentSnippet || item.summary || "No summary for this Nigerian or BBC Pidgin news item.",
+        summary: item.contentSnippet || item.summary || "No summary available.",
         imageUrl,
-        sourceUrl: item.link || "",
+        sourceUrl,
         sourceName: NEWS_SOURCES[source].name,
         category,
         publishedAt: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
       }
-    })
+    }))
+    return items
   } catch (error) {
     console.error(`Error fetching RSS feed from ${source}:`, error)
-
-    // Return mock data as fallback
-    return MOCK_NEWS.filter((item) => item.sourceName.includes(NEWS_SOURCES[source].name.split(" ")[0]))
+    return []
   }
 }
 
 // Function to scrape news from website using cheerio
 export async function scrapeNews(source: keyof typeof NEWS_SOURCES): Promise<NewsItem[]> {
   try {
-    console.log(`Scraping news from ${NEWS_SOURCES[source].name} (${NEWS_SOURCES[source].url})`)
-
-    // In the preview environment, we can't make HTTP requests
-    // Return mock data filtered by source
-    if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-      console.log("Using mock data for preview environment")
-      return MOCK_NEWS.filter((item) => item.sourceName.includes(NEWS_SOURCES[source].name.split(" ")[0]))
-    }
-
     const response = await fetch(NEWS_SOURCES[source].url)
     const html = await response.text()
     const $ = cheerio.load(html)
     const newsItems: NewsItem[] = []
 
-    // Different scraping logic for different sources
+    // Guardian
     if (source === "guardian") {
-      $("article").each((i, el) => {
-        const title = $(el).find("h3").text().trim()
-        const link = $(el).find("a").attr("href")
-        const summary = $(el).find("p").text().trim()
-        const imageUrl = $(el).find("img").attr("src") || "/placeholder.svg?height=400&width=600"
-
-        if (title && link) {
-          newsItems.push({
-            id: uuidv4(),
-            title,
-            summary: summary || "No summary for this Nigerian or BBC Pidgin news item.",
-            imageUrl,
-            sourceUrl: link.startsWith("http") ? link : `https://guardian.ng${link}`,
-            sourceName: NEWS_SOURCES[source].name,
-            category: "general", // We'll categorize later
-            publishedAt: new Date().toISOString(),
-          })
-        }
-      })
+      await Promise.all(
+        $("article").toArray().map(async (el) => {
+          const $el = $(el)
+          const title = $el.find("h3").text().trim()
+          const link = $el.find("a").attr("href") || ""
+          const summary = $el.find("p").text().trim()
+          let imageUrl = $el.find("img").attr("src") || ""
+          let sourceUrl = getAbsoluteUrl(link, "https://guardian.ng/")
+          if (sourceUrl) sourceUrl = await fetchCanonicalUrl(sourceUrl)
+          if (sourceUrl) imageUrl = await fetchImageUrl(sourceUrl, imageUrl)
+          if (title && sourceUrl && imageUrl) {
+            newsItems.push({
+              id: uuidv4(),
+              title,
+              summary: summary || "No summary available.",
+              imageUrl,
+              sourceUrl,
+              sourceName: NEWS_SOURCES[source].name,
+              category: "general",
+              publishedAt: new Date().toISOString(),
+            })
+          }
+        })
+      )
     }
-    // Add more scraping logic for other sources as needed
-
+    // Punch
+    else if (source === "punch") {
+      await Promise.all(
+        $("article").toArray().map(async (el) => {
+          const $el = $(el)
+          const title = $el.find("h2, h3").text().trim()
+          const link = $el.find("a").attr("href") || ""
+          const summary = $el.find("p").text().trim()
+          let imageUrl = $el.find("img").attr("src") || ""
+          let sourceUrl = getAbsoluteUrl(link, "https://punchng.com/")
+          if (sourceUrl) sourceUrl = await fetchCanonicalUrl(sourceUrl)
+          if (sourceUrl) imageUrl = await fetchImageUrl(sourceUrl, imageUrl)
+          if (title && sourceUrl && imageUrl) {
+            newsItems.push({
+              id: uuidv4(),
+              title,
+              summary: summary || "No summary available.",
+              imageUrl,
+              sourceUrl,
+              sourceName: NEWS_SOURCES[source].name,
+              category: "general",
+              publishedAt: new Date().toISOString(),
+            })
+          }
+        })
+      )
+    }
+    // Vanguard
+    else if (source === "vanguard") {
+      await Promise.all(
+        $("article").toArray().map(async (el) => {
+          const $el = $(el)
+          const title = $el.find("h2, h3").text().trim()
+          const link = $el.find("a").attr("href") || ""
+          const summary = $el.find("p").text().trim()
+          let imageUrl = $el.find("img").attr("src") || ""
+          let sourceUrl = getAbsoluteUrl(link, "https://www.vanguardngr.com/")
+          if (sourceUrl) sourceUrl = await fetchCanonicalUrl(sourceUrl)
+          if (sourceUrl) imageUrl = await fetchImageUrl(sourceUrl, imageUrl)
+          if (title && sourceUrl && imageUrl) {
+            newsItems.push({
+              id: uuidv4(),
+              title,
+              summary: summary || "No summary available.",
+              imageUrl,
+              sourceUrl,
+              sourceName: NEWS_SOURCES[source].name,
+              category: "general",
+              publishedAt: new Date().toISOString(),
+            })
+          }
+        })
+      )
+    }
+    // Add similar logic for other sources (premiumTimes, channelsTV, bbcPidgin, thisDay, dailyTrust)
     return newsItems
   } catch (error) {
     console.error(`Error scraping news from ${source}:`, error)
-    return MOCK_NEWS.filter((item) => item.sourceName.includes(NEWS_SOURCES[source].name.split(" ")[0]))
+    return []
+  }
+}
+
+// Helper to fetch the best image from the article page if not present in preview
+async function fetchImageUrl(articleUrl: string, fallback: string): Promise<string> {
+  try {
+    const res = await fetch(articleUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NaijaNewsBot/1.0)' } })
+    if (!res.ok) return fallback || "/placeholder.svg?height=400&width=600"
+    const html = await res.text()
+    const $ = cheerio.load(html)
+    // Try og:image first
+    const ogImg = $('meta[property="og:image"]').attr('content')
+    if (ogImg && ogImg.startsWith('http')) return ogImg
+    // Try twitter:image
+    const twitterImg = $('meta[name="twitter:image"]').attr('content')
+    if (twitterImg && twitterImg.startsWith('http')) return twitterImg
+    // Try first <img>
+    const img = $('img').attr('src')
+    if (img && img.startsWith('http')) return img
+    return fallback || "/placeholder.svg?height=400&width=600"
+  } catch {
+    return fallback || "/placeholder.svg?height=400&width=600"
   }
 }
 
 // Update the fetchAllNews function to handle individual source failures better
 export async function fetchAllNews(): Promise<NewsItem[]> {
   try {
-    // Check if we're in preview mode
-    if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-      console.log("Using mock data for preview environment")
-      return MOCK_NEWS
-    }
-
     const allNews: NewsItem[] = []
 
     // Fetch from all sources
@@ -317,19 +409,13 @@ export async function fetchAllNews(): Promise<NewsItem[]> {
         allNews.push(...result.value)
       } else {
         console.error(`Failed to fetch from ${sources[index]}:`, result.reason)
-        // Add mock data for failed sources
-        allNews.push(
-          ...MOCK_NEWS.filter((item) => item.sourceName.includes(NEWS_SOURCES[sources[index]].name.split(" ")[0])),
-        )
       }
     })
 
     return allNews
   } catch (error) {
     console.error("Error fetching all news:", error)
-
-    // Return all mock data as fallback
-    return MOCK_NEWS
+    return []
   }
 }
 
@@ -356,7 +442,6 @@ export async function categorizeNews(news: NewsItem[]): Promise<Record<string, N
     sports: [],
     tech: [],
     business: [],
-    crime: [],
     general: [],
   }
 
@@ -404,224 +489,6 @@ export async function processAllNews(): Promise<Record<string, NewsItem[]>> {
     return categorizedNews
   } catch (error) {
     console.error("Error processing all news:", error)
-
-    // Return categorized mock data
-    const categorized = await categorizeNews(MOCK_NEWS)
-    return categorized
+    return {}
   }
 }
-
-// Mock data for when RSS fetching isn't available (for development/preview)
-export const MOCK_NEWS: NewsItem[] = [
-  {
-    id: "1",
-    title: "Nigeria Announces New Economic Reforms to Boost Growth",
-    summary:
-      "The Nigerian government has unveiled a comprehensive economic reform package aimed at stimulating growth and attracting foreign investment.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://guardian.ng/news/nigeria-announces-new-economic-reforms",
-    sourceName: "The Guardian",
-    category: "politics",
-    publishedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-  },
-  {
-    id: "2",
-    title: "Super Eagles Qualify for African Cup of Nations",
-    summary:
-      "Nigeria's national football team, the Super Eagles, have qualified for the upcoming African Cup of Nations after a decisive victory.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://punchng.com/sports/super-eagles-qualify-for-afcon",
-    sourceName: "Punch",
-    category: "sports",
-    publishedAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-  },
-  {
-    id: "3",
-    title: "Nollywood Film Wins International Award at Cannes",
-    summary:
-      "A Nigerian film has won a prestigious award at the Cannes Film Festival, marking a significant achievement for Nollywood.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://vanguardngr.com/entertainment/nollywood-film-wins-at-cannes",
-    sourceName: "Vanguard",
-    category: "entertainment",
-    publishedAt: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
-  },
-  {
-    id: "4",
-    title: "Nigerian Tech Startup Raises $10 Million in Funding",
-    summary:
-      "A Lagos-based technology startup has secured $10 million in Series A funding to expand its operations across Africa.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://premiumtimesng.com/business/nigerian-tech-startup-raises-10-million",
-    sourceName: "Premium Times",
-    category: "tech",
-    publishedAt: new Date(Date.now() - 14400000).toISOString(), // 4 hours ago
-  },
-  {
-    id: "5",
-    title: "Central Bank of Nigeria Announces New Monetary Policy",
-    summary:
-      "The CBN has announced changes to its monetary policy in an effort to stabilize the naira and control inflation.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://guardian.ng/business/cbn-announces-new-monetary-policy",
-    sourceName: "The Guardian",
-    category: "business",
-    publishedAt: new Date(Date.now() - 18000000).toISOString(), // 5 hours ago
-  },
-  {
-    id: "6",
-    title: "President Addresses Nation on Security Challenges",
-    summary:
-      "The Nigerian President has addressed the nation regarding ongoing security challenges and outlined new strategies to combat insecurity.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://punchng.com/politics/president-addresses-nation-on-security",
-    sourceName: "Punch",
-    category: "politics",
-    publishedAt: new Date(Date.now() - 21600000).toISOString(), // 6 hours ago
-  },
-  {
-    id: "7",
-    title: "Nigerian Athlete Breaks Olympic Record",
-    summary:
-      "A Nigerian athlete has broken an Olympic record in athletics, bringing pride to the nation and inspiring young sports enthusiasts.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://vanguardngr.com/sports/nigerian-athlete-breaks-olympic-record",
-    sourceName: "Vanguard",
-    category: "sports",
-    publishedAt: new Date(Date.now() - 25200000).toISOString(), // 7 hours ago
-  },
-  {
-    id: "8",
-    title: "Popular Nigerian Musician Releases New Album",
-    summary:
-      "A chart-topping Nigerian musician has released a highly anticipated new album that is already breaking streaming records.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://premiumtimesng.com/entertainment/musician-releases-new-album",
-    sourceName: "Premium Times",
-    category: "entertainment",
-    publishedAt: new Date(Date.now() - 28800000).toISOString(), // 8 hours ago
-  },
-  {
-    id: "9",
-    title: "Nigeria Launches New Satellite for Communications",
-    summary:
-      "Nigeria has successfully launched a new satellite that will enhance telecommunications and internet connectivity across the country.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://guardian.ng/tech/nigeria-launches-new-satellite",
-    sourceName: "The Guardian",
-    category: "tech",
-    publishedAt: new Date(Date.now() - 32400000).toISOString(), // 9 hours ago
-  },
-  {
-    id: "10",
-    title: "Stock Market Reaches New Heights as Investor Confidence Grows",
-    summary:
-      "The Nigerian Stock Exchange has reached a new all-time high as investor confidence in the economy continues to grow.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://punchng.com/business/stock-market-reaches-new-heights",
-    sourceName: "Punch",
-    category: "business",
-    publishedAt: new Date(Date.now() - 36000000).toISOString(), // 10 hours ago
-  },
-  {
-    id: "11",
-    title: "Government Announces New Infrastructure Projects",
-    summary:
-      "The Nigerian government has announced several new infrastructure projects aimed at improving transportation and power supply.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://vanguardngr.com/politics/government-announces-infrastructure-projects",
-    sourceName: "Vanguard",
-    category: "politics",
-    publishedAt: new Date(Date.now() - 39600000).toISOString(), // 11 hours ago
-  },
-  {
-    id: "12",
-    title: "Nigerian Football Club Advances to Continental Championship",
-    summary:
-      "A Nigerian football club has advanced to the finals of a continental championship, bringing pride to Nigerian sports fans.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://premiumtimesng.com/sports/football-club-advances-to-championship",
-    sourceName: "Premium Times",
-    category: "sports",
-    publishedAt: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
-  },
-  {
-    id: "13",
-    title: "Nollywood Announces International Collaboration with Hollywood",
-    summary:
-      "The Nigerian film industry has announced a major collaboration with Hollywood studios to produce international-standard films.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://guardian.ng/entertainment/nollywood-announces-hollywood-collaboration",
-    sourceName: "The Guardian",
-    category: "entertainment",
-    publishedAt: new Date(Date.now() - 46800000).toISOString(), // 13 hours ago
-  },
-  {
-    id: "14",
-    title: "Nigerian Tech Innovators Showcase Solutions at Global Conference",
-    summary:
-      "Nigerian technology innovators have showcased their solutions at a global technology conference, attracting international attention.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://punchng.com/tech/nigerian-innovators-at-global-conference",
-    sourceName: "Punch",
-    category: "tech",
-    publishedAt: new Date(Date.now() - 50400000).toISOString(), // 14 hours ago
-  },
-  {
-    id: "15",
-    title: "Nigerian Banks Report Strong Quarterly Earnings",
-    summary:
-      "Major Nigerian banks have reported strong quarterly earnings, indicating resilience in the financial sector despite economic challenges.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://vanguardngr.com/business/banks-report-strong-earnings",
-    sourceName: "Vanguard",
-    category: "business",
-    publishedAt: new Date(Date.now() - 54000000).toISOString(), // 15 hours ago
-  },
-  // BBC Pidgin mock news
-  {
-    id: "16",
-    title: "How Nigeria New Minimum Wage Go Affect Workers",
-    summary:
-      "BBC Pidgin don look how di new minimum wage wey Nigeria government approve go affect workers for di kontri.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://www.bbc.com/pidgin/articles/nigeria-new-minimum-wage",
-    sourceName: "BBC Pidgin",
-    category: "business",
-    publishedAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-  },
-  {
-    id: "17",
-    title: "Afrobeats Stars Wey Dey Dominate Global Music Charts",
-    summary: "See di Nigerian Afrobeats stars wey dey make waves for international music charts with dia latest songs.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://www.bbc.com/pidgin/articles/afrobeats-stars-global-charts",
-    sourceName: "BBC Pidgin",
-    category: "entertainment",
-    publishedAt: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
-  },
-  // ThisDay mock news
-  {
-    id: "18",
-    title: "Nigeria's Oil Production Increases by 20% in Q2",
-    summary:
-      "Nigeria has recorded a significant increase in oil production in the second quarter of the year, according to NNPC reports.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://www.thisdaylive.com/index.php/2023/07/15/nigerias-oil-production-increases",
-    sourceName: "ThisDay",
-    category: "business",
-    publishedAt: new Date(Date.now() - 14400000).toISOString(), // 4 hours ago
-  },
-  // Daily Trust mock news
-  {
-    id: "19",
-    title: "Northern Governors Forum Addresses Security Challenges",
-    summary:
-      "The Northern Governors Forum has met to address the security challenges facing the northern region of Nigeria.",
-    imageUrl: "/placeholder.svg?height=400&width=600",
-    sourceUrl: "https://dailytrust.com/northern-governors-forum-addresses-security-challenges",
-    sourceName: "Daily Trust",
-    category: "politics",
-    publishedAt: new Date(Date.now() - 18000000).toISOString(), // 5 hours ago
-  },
-]

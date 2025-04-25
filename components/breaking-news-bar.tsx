@@ -47,6 +47,17 @@ export default function BreakingNewsBar() {
 
   if (!news.length) return null
   const current = news[currentIndex]
+  // Ensure we always use the correct link and validate it's a proper URL
+  let newsLink = current.sourceUrl || current.link || current.url || "#"
+  try {
+    // Only allow http(s) links, otherwise fallback to '#'
+    const urlObj = new URL(newsLink, window.location.origin)
+    if (!(urlObj.protocol === "http:" || urlObj.protocol === "https:")) {
+      newsLink = "#"
+    }
+  } catch {
+    newsLink = "#"
+  }
 
   return (
     <div className="bg-breaking-news text-white py-2 overflow-hidden">
@@ -57,9 +68,14 @@ export default function BreakingNewsBar() {
         </div>
         <div className="overflow-hidden relative flex-1">
           <div className="animate-fade-in" key={current.id}>
-            <Link href={current.sourceUrl || "#"} className="hover:underline">
+            <a
+              href={newsLink}
+              className="hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {current.title}
-            </Link>
+            </a>
           </div>
         </div>
       </div>

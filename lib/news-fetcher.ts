@@ -12,11 +12,8 @@ const CACHE_EXPIRATION = 5 * 60 * 1000
 
 // Function to get news data, either from cache or by fetching
 async function getNewsData(): Promise<Record<string, NewsItem[]>> {
-  // If in preview mode, return categorized mock data
-  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-    console.log("Using mock data for preview environment")
-    return categorizeNews(MOCK_NEWS)
-  }
+  // Always fetch real news, never use mock data
+  // Remove preview mode check
 
   // If cache exists and is not expired, use it
   if (newsCache && Date.now() - newsCache.timestamp < CACHE_EXPIRATION) {
@@ -50,9 +47,8 @@ async function getNewsData(): Promise<Record<string, NewsItem[]>> {
       return newsCache.data
     }
 
-    // If all else fails, return categorized mock data
-    console.log("Falling back to mock data")
-    return categorizeNews(MOCK_NEWS)
+    // If all else fails, return empty object (no mock data)
+    return {}
   }
 }
 
