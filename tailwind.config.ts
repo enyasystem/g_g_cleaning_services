@@ -52,17 +52,17 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // News-specific colors
-        "news-primary": "#006400", // Nigerian green
+        // CNN-inspired color system
+        "news-primary": "#CC0000", // CNN Red
         "news-secondary": "#FFFFFF",
-        "news-accent": "#008000", // Lighter green
-        "news-highlight": "#00A36C", // Jade green
-        "breaking-news": "#FF0000", // Red for breaking news
-        politics: "#8B0000", // Dark red
-        entertainment: "#9932CC", // Dark orchid
-        sports: "#1E90FF", // Dodger blue
-        tech: "#2E8B57", // Sea green
-        business: "#DAA520", // Goldenrod
+        "news-accent": "#222222", // CNN Black
+        "news-highlight": "#E30613", // CNN Highlight Red
+        "breaking-news": "#CC0000", // CNN Red for breaking news
+        politics: "#B80000", // Deep red
+        entertainment: "#E30613", // CNN Highlight Red
+        sports: "#222222", // CNN Black
+        tech: "#B3B3B3", // CNN Gray
+        business: "#A7A9AC", // CNN Silver
       },
       borderRadius: {
         lg: "var(--radius)",
