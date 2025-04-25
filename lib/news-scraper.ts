@@ -104,23 +104,26 @@ function determineCategoryFromItem(item: any): string {
   const categories = item.categories || []
   const content = (item.content || "").toLowerCase()
 
-  // Check if categories array contains any of our predefined categories
+  // Expanded category map with more keywords
   const categoryMap: Record<string, string[]> = {
-    politics: ["politics", "government", "election", "president", "minister", "senate", "parliament"],
-    entertainment: ["entertainment", "music", "movie", "celebrity", "film", "actor", "actress", "nollywood"],
-    sports: [
-      "sports",
-      "football",
-      "soccer",
-      "basketball",
-      "tennis",
-      "athlete",
-      "tournament",
-      "championship",
-      "super eagles",
+    politics: [
+      "politics", "government", "election", "president", "minister", "senate", "parliament", "governor", "assembly", "law", "policy", "court", "justice", "democracy", "campaign", "vote", "political", "party"
     ],
-    tech: ["tech", "technology", "digital", "software", "hardware", "internet", "app", "computer", "smartphone"],
-    business: ["business", "economy", "finance", "market", "stock", "trade", "investment", "banking", "naira"],
+    entertainment: [
+      "entertainment", "music", "movie", "celebrity", "film", "actor", "actress", "nollywood", "award", "album", "song", "concert", "show", "star", "artist", "comedy", "festival"
+    ],
+    sports: [
+      "sports", "football", "soccer", "basketball", "tennis", "athlete", "tournament", "championship", "super eagles", "match", "goal", "league", "cup", "olympic", "coach", "player"
+    ],
+    tech: [
+      "tech", "technology", "digital", "software", "hardware", "internet", "app", "computer", "smartphone", "startup", "innovation", "ai", "robot", "gadget", "device", "cyber"
+    ],
+    business: [
+      "business", "economy", "finance", "market", "stock", "trade", "investment", "banking", "naira", "cbn", "company", "industry", "entrepreneur", "revenue", "profit", "loss", "inflation"
+    ],
+    crime: [
+      "crime", "kidnap", "kidnapping", "abduct", "abduction", "robbery", "theft", "murder", "attack", "bandit", "banditry", "police", "security", "prison", "court", "arrest", "violence", "priest", "church", "gunmen", "assault", "rape", "fraud", "scam", "homicide", "suspect", "victim"
+    ],
   }
 
   // Check categories first
@@ -353,6 +356,7 @@ export async function categorizeNews(news: NewsItem[]): Promise<Record<string, N
     sports: [],
     tech: [],
     business: [],
+    crime: [],
     general: [],
   }
 
