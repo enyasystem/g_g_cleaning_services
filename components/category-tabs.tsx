@@ -9,21 +9,25 @@ export default function CategoryTabs() {
   const pathname = usePathname()
 
   const categories = [
-    { value: "/", label: "All" },
-    { value: "/politics", label: "Politics" },
-    { value: "/entertainment", label: "Entertainment" },
-    { value: "/sports", label: "Sports" },
-    { value: "/tech", label: "Tech" },
-    { value: "/business", label: "Business" },
+    { value: "/", label: "All", color: "news-primary" },
+    { value: "/politics", label: "Politics", color: "politics" },
+    { value: "/entertainment", label: "Entertainment", color: "entertainment" },
+    { value: "/sports", label: "Sports", color: "sports" },
+    { value: "/tech", label: "Tech", color: "tech" },
+    { value: "/business", label: "Business", color: "business" },
   ]
 
   const currentPath = pathname === "/" ? "/" : `/${pathname.split("/")[1]}`
 
   return (
     <Tabs defaultValue={currentPath} className="w-full" onValueChange={(value) => router.push(value)}>
-      <TabsList className="w-full overflow-x-auto flex-nowrap justify-start">
+      <TabsList className="w-full overflow-x-auto flex-nowrap justify-start bg-white dark:bg-gray-800">
         {categories.map((category) => (
-          <TabsTrigger key={category.value} value={category.value} className="flex-shrink-0">
+          <TabsTrigger
+            key={category.value}
+            value={category.value}
+            className="flex-shrink-0 data-[state=active]:bg-news-primary data-[state=active]:text-white"
+          >
             {category.label}
           </TabsTrigger>
         ))}

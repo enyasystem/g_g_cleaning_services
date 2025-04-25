@@ -9,7 +9,11 @@ import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
-export default function SearchBar() {
+interface SearchBarProps {
+  fullWidth?: boolean
+}
+
+export default function SearchBar({ fullWidth = false }: SearchBarProps) {
   const [query, setQuery] = useState("")
   const router = useRouter()
 
@@ -21,15 +25,21 @@ export default function SearchBar() {
   }
 
   return (
-    <form onSubmit={handleSearch} className="relative w-full max-w-sm">
+    <form onSubmit={handleSearch} className={`relative ${fullWidth ? "w-full" : "w-full max-w-sm"}`}>
       <Input
         type="search"
         placeholder="Search news..."
-        className="w-full pr-10"
+        className="w-full pr-10 border-news-primary focus-visible:ring-news-highlight"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      <Button type="submit" variant="ghost" size="icon" className="absolute right-0 top-0 h-full" aria-label="Search">
+      <Button
+        type="submit"
+        variant="ghost"
+        size="icon"
+        className="absolute right-0 top-0 h-full text-news-primary hover:text-news-highlight hover:bg-transparent"
+        aria-label="Search"
+      >
         <Search className="h-4 w-4" />
       </Button>
     </form>
