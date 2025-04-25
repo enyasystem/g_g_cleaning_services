@@ -69,7 +69,7 @@ export default function HomePage() {
               </Link>
             </div>
             <Suspense fallback={<NewsGridSkeleton count={2} />}>
-              <NewsGrid category="politics" limit={2} />
+              <NewsGrid category="politics" limit={2} columns={2} />
             </Suspense>
           </section>
 
@@ -81,7 +81,7 @@ export default function HomePage() {
               </Link>
             </div>
             <Suspense fallback={<NewsGridSkeleton count={2} />}>
-              <NewsGrid category="business" limit={2} />
+              <NewsGrid category="business" limit={2} columns={2} />
             </Suspense>
           </section>
         </div>
@@ -95,7 +95,7 @@ export default function HomePage() {
               </Link>
             </div>
             <Suspense fallback={<NewsGridSkeleton count={2} />}>
-              <NewsGrid category="entertainment" limit={2} />
+              <NewsGrid category="entertainment" limit={2} columns={2} />
             </Suspense>
           </section>
 
@@ -107,7 +107,7 @@ export default function HomePage() {
               </Link>
             </div>
             <Suspense fallback={<NewsGridSkeleton count={2} />}>
-              <NewsGrid category="sports" limit={2} />
+              <NewsGrid category="sports" limit={2} columns={2} />
             </Suspense>
           </section>
 
@@ -119,7 +119,7 @@ export default function HomePage() {
               </Link>
             </div>
             <Suspense fallback={<NewsGridSkeleton count={2} />}>
-              <NewsGrid category="tech" limit={2} />
+              <NewsGrid category="tech" limit={2} columns={2} />
             </Suspense>
           </section>
         </div>
