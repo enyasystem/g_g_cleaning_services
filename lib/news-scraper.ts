@@ -184,8 +184,8 @@ async function fetchCanonicalUrl(articleUrl: string): Promise<string> {
   }
 }
 
-// Update the fetchRssWithFetch function to use AbortController for timeout
-async function fetchRssWithFetch(url: string) {
+// Update fetchRssWithFetch to catch and return null on network errors, never infinite retry
+async function fetchRssWithFetch(url: string, retries = 2): Promise<any> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000); // 10 seconds
   try {
@@ -198,6 +198,7 @@ async function fetchRssWithFetch(url: string) {
     clearTimeout(timeout);
     if (!response.ok) {
       console.warn(`Failed to fetch RSS feed: ${response.status} ${response.statusText} for ${url}`);
+      if (retries > 0) return await fetchRssWithFetch(url, retries - 1);
       return null;
     }
     const text = await response.text();
@@ -209,35 +210,26 @@ async function fetchRssWithFetch(url: string) {
     } else {
       console.error(`Error fetching RSS feed from ${url}:`, error);
     }
+    // Only retry on first error, then give up and return null
+    if (retries > 0) return await fetchRssWithFetch(url, retries - 1);
     return null;
   }
 }
 
-// Update the fetchRssFeed function to handle null responses from fetchRssWithFetch
+// Update the fetchRssFeed function to handle retries from fetchRssWithFetch
 export async function fetchRssFeed(source: keyof typeof NEWS_SOURCES): Promise<NewsItem[]> {
   try {
     console.log(`Fetching RSS feed from ${NEWS_SOURCES[source].name} (${NEWS_SOURCES[source].url})`)
-
-    // Use fetch API instead of https.get
     const feed = await fetchRssWithFetch(NEWS_SOURCES[source].url)
-
-    // If feed is null (fetch failed), return empty array
-    if (!feed) {
-      console.warn(`Failed to fetch RSS feed from ${source}`)
-      return []
-    }
-
-    if (!feed.items || feed.items.length === 0) {
+    if (!feed || !feed.items || feed.items.length === 0) {
       console.warn(`No items found in RSS feed from ${source}`)
       return []
     }
-
     const items = await Promise.all(feed.items.map(async (item) => {
       const imageUrl = extractImageFromItem(item)
       const category = determineCategoryFromItem(item)
       const rawLink = item.link || ""
       let sourceUrl = getAbsoluteUrl(rawLink, NEWS_SOURCES[source].url.replace(/\/feed.*/, "/"))
-      // Fetch canonical/og:url for all sources if possible
       if (sourceUrl) {
         sourceUrl = await fetchCanonicalUrl(sourceUrl)
       }
@@ -264,8 +256,8 @@ export async function scrapeNews(source: keyof typeof NEWS_SOURCES): Promise<New
   try {
     const response = await fetch(NEWS_SOURCES[source].url)
     const html = await response.text()
-    const $ = cheerio.load(html)
     const newsItems: NewsItem[] = []
+    const $ = cheerio.load(html)
 
     // Guardian
     if (source === "guardian") {
@@ -422,16 +414,25 @@ export async function fetchAllNews(): Promise<NewsItem[]> {
 // Function to normalize news data
 export async function normalizeNewsData(rawNews: NewsItem[]): Promise<NewsItem[]> {
   // Clean and normalize the data from different sources
-  return rawNews.map((item) => ({
-    ...item,
-    title: item.title.trim(),
-    summary:
-      item.summary
-        .trim()
-        .replace(/<[^>]*>?/gm, "")
-        .substring(0, 200) + (item.summary.length > 200 ? "..." : ""),
-    imageUrl: item.imageUrl || "/placeholder.svg?height=400&width=600",
-  }))
+  return await Promise.all(
+    rawNews.map(async (item) => {
+      let imageUrl = item.imageUrl || ""
+      // If imageUrl is missing or is a placeholder, try to fetch from the article page
+      if (!imageUrl || imageUrl.includes("placeholder")) {
+        imageUrl = await fetchImageUrl(item.sourceUrl, "/placeholder.svg?height=400&width=600")
+      }
+      return {
+        ...item,
+        title: item.title.trim(),
+        summary:
+          item.summary
+            .trim()
+            .replace(/<[^>]*>?/gm, "")
+            .substring(0, 200) + (item.summary.length > 200 ? "..." : ""),
+        imageUrl: imageUrl || "/placeholder.svg?height=400&width=600",
+      }
+    })
+  )
 }
 
 // Function to categorize news
