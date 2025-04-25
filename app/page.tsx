@@ -1,4 +1,6 @@
-import { Suspense } from "react"
+"use client"
+
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 
@@ -12,6 +14,36 @@ import SiteHeader from "@/components/site-header"
 import WeatherWidget from "@/components/weather-widget"
 import CurrencyWidget from "@/components/currency-widget"
 import NewsSources from "@/components/news-sources"
+
+function NewsletterSubscribe() {
+  const [email, setEmail] = useState("")
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // You can add your subscribe logic here
+  }
+  return (
+    <div className="bg-news-primary text-white p-4 rounded-lg shadow-md">
+      <h3 className="font-bold mb-2">Subscribe to Our Newsletter</h3>
+      <p className="text-sm mb-4">Get the latest news delivered to your inbox daily.</p>
+      <form className="flex flex-col gap-2 sm:flex-row sm:items-center" onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="Your email"
+          className="px-3 py-2 rounded text-black text-sm flex-1 min-w-0"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+        <Button
+          size="sm"
+          className="bg-white text-news-primary hover:bg-gray-100 w-full sm:w-auto mt-2 sm:mt-0"
+          type="submit"
+        >
+          Subscribe
+        </Button>
+      </form>
+    </div>
+  )
+}
 
 export default function HomePage() {
   return (
@@ -35,16 +67,7 @@ export default function HomePage() {
           <div className="space-y-6">
             <WeatherWidget />
             <CurrencyWidget />
-            <div className="bg-news-primary text-white p-4 rounded-lg shadow-md">
-              <h3 className="font-bold mb-2">Subscribe to Our Newsletter</h3>
-              <p className="text-sm mb-4">Get the latest news delivered to your inbox daily.</p>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input type="email" placeholder="Your email" className="px-3 py-2 rounded text-black text-sm flex-1" />
-                <Button size="sm" className="bg-white text-news-primary hover:bg-gray-100">
-                  Subscribe
-                </Button>
-              </div>
-            </div>
+            <NewsletterSubscribe />
           </div>
         </div>
 
@@ -191,8 +214,7 @@ export default function HomePage() {
                     href="https://www.bbc.com/pidgin"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-gray-200 hover:text-white"
-                  >
+                    className="text-sm text-gray-200 hover:text-white">
                     BBC Pidgin
                   </a>
                 </li>
