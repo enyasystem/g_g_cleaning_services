@@ -18,15 +18,15 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SiteHeader />
 
-      <main className="container py-6 md:py-8">
-        <div className="md:hidden mb-6">
+      <main className="container max-w-7xl px-2 sm:px-4 md:px-8 py-4 md:py-8">
+        <div className="block md:hidden mb-6">
           <CategoryTabs />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
           <div className="lg:col-span-3">
             <section className="mb-8">
-              <Suspense fallback={<div className="h-[400px] w-full rounded-lg bg-muted animate-pulse" />}>
+              <Suspense fallback={<div className="h-[300px] w-full rounded-lg bg-muted animate-pulse" />}>
                 <FeaturedNews />
               </Suspense>
             </section>
@@ -35,10 +35,10 @@ export default function HomePage() {
           <div className="space-y-6">
             <WeatherWidget />
             <CurrencyWidget />
-            <div className="bg-news-primary text-white p-4 rounded-lg">
+            <div className="bg-news-primary text-white p-4 rounded-lg shadow-md">
               <h3 className="font-bold mb-2">Subscribe to Our Newsletter</h3>
               <p className="text-sm mb-4">Get the latest news delivered to your inbox daily.</p>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <input type="email" placeholder="Your email" className="px-3 py-2 rounded text-black text-sm flex-1" />
                 <Button size="sm" className="bg-white text-news-primary hover:bg-gray-100">
                   Subscribe
@@ -49,7 +49,7 @@ export default function HomePage() {
         </div>
 
         <section className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
             <h2 className="text-2xl font-bold tracking-tight text-news-primary">Top Trending in Nigeria</h2>
             <Link href="/trending" className="flex items-center text-sm text-news-primary hover:underline">
               See all <ChevronRight className="ml-1 h-4 w-4" />
@@ -62,7 +62,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <section>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
               <h2 className="text-2xl font-bold tracking-tight text-politics">Politics</h2>
               <Link href="/politics" className="flex items-center text-sm text-politics hover:underline">
                 See all <ChevronRight className="ml-1 h-4 w-4" />
@@ -74,7 +74,7 @@ export default function HomePage() {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
               <h2 className="text-2xl font-bold tracking-tight text-business">Business</h2>
               <Link href="/business" className="flex items-center text-sm text-business hover:underline">
                 See all <ChevronRight className="ml-1 h-4 w-4" />
@@ -88,7 +88,7 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <section>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
               <h2 className="text-2xl font-bold tracking-tight text-entertainment">Entertainment</h2>
               <Link href="/entertainment" className="flex items-center text-sm text-entertainment hover:underline">
                 See all <ChevronRight className="ml-1 h-4 w-4" />
@@ -100,7 +100,7 @@ export default function HomePage() {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
               <h2 className="text-2xl font-bold tracking-tight text-sports">Sports</h2>
               <Link href="/sports" className="flex items-center text-sm text-sports hover:underline">
                 See all <ChevronRight className="ml-1 h-4 w-4" />
@@ -112,7 +112,7 @@ export default function HomePage() {
           </section>
 
           <section>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-2">
               <h2 className="text-2xl font-bold tracking-tight text-tech">Technology</h2>
               <Link href="/tech" className="flex items-center text-sm text-tech hover:underline">
                 See all <ChevronRight className="ml-1 h-4 w-4" />
@@ -129,7 +129,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className="bg-news-primary text-white">
+      <footer className="bg-news-primary text-white mt-8">
         <div className="container py-8 md:py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>

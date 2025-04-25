@@ -1,58 +1,52 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { AlertTriangle } from "lucide-react"
-import { MOCK_NEWS } from "@/lib/news-scraper"
+import { fetchAllNews } from "@/lib/news-scraper"
 
 export default function BreakingNewsBar() {
-  const [breakingNews, setBreakingNews] = useState([
-    {
-      id: "1",
-      title: "BREAKING: Nigerian Government Announces New Economic Policy",
-      link: "/politics/nigerian-government-announces-new-economic-policy",
-    },
-    {
-      id: "2",
-      title: "Super Eagles Win Critical Match Against Ghana",
-      link: "/sports/super-eagles-win-critical-match-against-ghana",
-    },
-    {
-      id: "3",
-      title: "Lagos State Implements New Transportation System",
-      link: "/news/lagos-state-implements-new-transportation-system",
-    },
-  ])
+  const [news, setNews] = useState<any[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const [currentNewsIndex, setCurrentNewsIndex] = useState(0)
-
+  // Fetch news headlines in real time (poll every 60 seconds)
   useEffect(() => {
-    // In a real app, you would fetch breaking news from an API
-    // For now, we'll use mock data
-    const fetchBreakingNews = async () => {
+    let isMounted = true
+    const fetchNews = async () => {
       try {
-        // Use the mock news for breaking news in preview
-        const latestNews = MOCK_NEWS.slice(0, 5).map((news) => ({
-          id: news.id,
-          title: news.title,
-          link: news.sourceUrl,
-          source: news.sourceName,
-        }))
-
-        setBreakingNews(latestNews)
+        const allNews = await fetchAllNews()
+        // Sort by publishedAt (latest first)
+        const sorted = allNews
+          .filter((n: any) => n.publishedAt)
+          .sort((a: any, b: any) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+        if (isMounted) setNews(sorted)
       } catch (error) {
-        console.error("Error fetching breaking news:", error)
+        if (isMounted) setNews([])
       }
     }
+    fetchNews()
+    const poll = setInterval(fetchNews, 60000)
+    return () => {
+      isMounted = false
+      clearInterval(poll)
+    }
+  }, [])
 
-    fetchBreakingNews()
-
-    const interval = setInterval(() => {
-      setCurrentNewsIndex((prevIndex) => (prevIndex + 1) % breakingNews.length)
+  // Cycle through headlines every 5 seconds
+  useEffect(() => {
+    if (!news.length) return
+    intervalRef.current && clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % news.length)
     }, 5000)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [news])
 
-    return () => clearInterval(interval)
-  }, [breakingNews.length])
+  if (!news.length) return null
+  const current = news[currentIndex]
 
   return (
     <div className="bg-breaking-news text-white py-2 overflow-hidden">
@@ -62,13 +56,10 @@ export default function BreakingNewsBar() {
           BREAKING NEWS
         </div>
         <div className="overflow-hidden relative flex-1">
-          <div className="animate-fade-in" key={breakingNews[currentNewsIndex]?.id}>
-            <Link href={breakingNews[currentNewsIndex]?.link || "#"} className="hover:underline">
-              {breakingNews[currentNewsIndex]?.title}
+          <div className="animate-fade-in" key={current.id}>
+            <Link href={current.sourceUrl || "#"} className="hover:underline">
+              {current.title}
             </Link>
-            {breakingNews[currentNewsIndex]?.source && (
-              <span className="ml-2 text-xs opacity-75">Source: {breakingNews[currentNewsIndex].source}</span>
-            )}
           </div>
         </div>
       </div>
