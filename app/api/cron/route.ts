@@ -1,6 +1,34 @@
 import { NextResponse } from "next/server"
-import { fetchAllNews, removeDuplicates, normalizeNewsData, categorizeNews } from "@/lib/news-scraper"
+import { removeDuplicates, normalizeNewsData, categorizeNews } from "@/lib/news-scraper"
 import { refreshNewsCache } from "@/lib/news-fetcher"
+import { NEWS_SOURCES, fetchRssFeed, scrapeNews } from "@/lib/news-scraper"
+
+// Helper function to add delay
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Fetch all news with delay between sources to avoid rate limiting
+async function fetchAllNewsWithDelay() {
+  const sources = Object.keys(NEWS_SOURCES) as Array<keyof typeof NEWS_SOURCES>;
+  let allNews = [];
+  for (const source of sources) {
+    try {
+      const sourceInfo = NEWS_SOURCES[source];
+      let news;
+      if (sourceInfo.type === "rss") {
+        news = await fetchRssFeed(source);
+      } else {
+        news = await scrapeNews(source);
+      }
+      allNews.push(...news);
+      await delay(2000); // 2 seconds delay between requests
+    } catch (error) {
+      console.error(`Error fetching from ${String(source)}:`, error);
+    }
+  }
+  return allNews;
+}
 
 // This route would be called by a cron job service like Vercel Cron
 export async function GET(request: Request) {
@@ -15,8 +43,8 @@ export async function GET(request: Request) {
   try {
     console.log("Starting news fetching cron job...")
 
-    // Fetch all news from RSS feeds
-    const allNews = await fetchAllNews()
+    // Fetch all news from RSS feeds with delay
+    const allNews = await fetchAllNewsWithDelay();
     console.log(`Fetched ${allNews.length} news items from all sources`)
 
     // Remove duplicates

@@ -15,7 +15,7 @@ const parser = new Parser({
 })
 
 // Map of news sources
-const NEWS_SOURCES = {
+export const NEWS_SOURCES = {
   guardian: {
     name: "The Guardian Nigeria",
     url: "https://guardian.ng/feed/",
@@ -56,7 +56,7 @@ const NEWS_SOURCES = {
     url: "https://dailytrust.com/feed/",
     type: "rss",
   },
-}
+} as const;
 
 // Function to extract image from RSS feed item
 function extractImageFromItem(item: any): string {
