@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth; /* Added for smooth scrolling */
+  }
+
+  :root {
+    --background: 220 30% 98%; /* Very light cool gray */
+    --foreground: 220 15% 25%; /* Dark grayish blue */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 220 15% 25%; /* Dark grayish blue */
+
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 220 15% 25%; /* Dark grayish blue */
+
+    --primary: 220 35% 35%; /* Deep Slate Blue */
+    --primary-foreground: 220 25% 95%; /* Very light blue/gray */
+
+    --secondary: 40 50% 70%; /* Muted Gold/Sand */
+    --secondary-foreground: 40 30% 20%; /* Dark text for gold */
+
+    --muted: 220 25% 94%; /* Light cool gray */
+    --muted-foreground: 220 15% 45%; /* Medium grayish blue */
+
+    --accent: 170 25% 55%; /* Soft Teal/Greyish Green */
+    --accent-foreground: 170 25% 15%; /* Dark text for teal */
+
+    --destructive: 0 62.8% 30.6%; /* Default shadcn destructive */
+    --destructive-foreground: 0 0% 98%; /* Default shadcn destructive-foreground */
+
+    --border: 220 20% 90%; /* Light gray border */
+    --input: 220 20% 85%; /* Slightly darker gray for input border */
+    --ring: 220 40% 55%; /* Brighter slate blue for focus */
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 220 15% 12%; /* Dark slate gray */
+    --foreground: 220 20% 88%; /* Light cool gray */
+
+    --card: 220 15% 16%; /* Slightly lighter dark slate */
+    --card-foreground: 220 20% 88%; /* Light cool gray */
+
+    --popover: 220 15% 12%; /* Dark slate gray */
+    --popover-foreground: 220 20% 88%; /* Light cool gray */
+
+    --primary: 220 35% 45%; /* Slightly lighter Deep Slate Blue for dark mode */
+    --primary-foreground: 220 25% 95%; /* Very light blue/gray */
+
+    --secondary: 40 40% 60%; /* Muted Gold/Sand for dark mode */
+    --secondary-foreground: 40 30% 15%; /* Darker text for dark mode gold */
+
+    --muted: 220 15% 22%; /* Darker cool gray */
+    --muted-foreground: 220 20% 65%; /* Lighter medium grayish blue */
+
+    --accent: 170 20% 45%; /* Soft Teal/Greyish Green for dark mode */
+    --accent-foreground: 170 25% 90%; /* Lighter text for dark mode teal */
+
+    --destructive: 0 62.8% 30.6%; /* Default shadcn destructive */
+    --destructive-foreground: 0 0% 98%; /* Default shadcn destructive-foreground */
+
+    --border: 220 15% 25%; /* Dark gray border */
+    --input: 220 15% 30%; /* Slightly lighter dark gray for input border */
+    --ring: 220 40% 65%; /* Brighter slate blue for focus in dark mode */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
