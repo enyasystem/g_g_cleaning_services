@@ -1,15 +1,14 @@
+"use client"
+import { getClientSupabase } from "@/lib/supabase/client"
+import { useEffect, useState } from "react"
 import BookingForm from "@/components/booking/booking-form"
 import Navbar from "@/components/site/navbar"
 import Footer from "@/components/site/footer"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "Book a Service",
-  description:
-    "Schedule your professional cleaning or maintenance service with G&G Services. Easy online booking for residential and commercial needs.",
-}
 
 export default function BookPage() {
+  // Example: You can fetch any public data here if needed
+  // const [data, setData] = useState<any[]>([])
+  // useEffect(() => { ... }, [])
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />

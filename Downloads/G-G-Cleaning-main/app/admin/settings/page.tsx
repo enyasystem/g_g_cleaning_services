@@ -1,18 +1,35 @@
+"use client"
+import { getClientSupabase } from "@/lib/supabase/client"
+import { useEffect, useState } from "react"
+import SettingsManagement from "@/components/admin/settings-management"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "Admin Settings",
-  robots: {
-    index: false,
-    follow: false,
-  },
-}
 
 export default function AdminSettingsPage() {
+  const [settings, setSettings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const supabase = getClientSupabase()
+      const { data, error } = await supabase
+        .from("settings")
+        .select("*")
+      if (error) {
+        setError("Error loading settings.")
+      } else {
+        setSettings(data || [])
+      }
+      setLoading(false)
+    }
+    fetchSettings()
+  }, [])
+
+  if (loading) return <div>Loading settings...</div>
+  if (error) return <div>{error}</div>
   return (
     <div className="space-y-6">
       <Card>
@@ -57,6 +74,7 @@ export default function AdminSettingsPage() {
           <Button>Save Business Info</Button>
         </CardContent>
       </Card>
+      <SettingsManagement settings={settings} />
     </div>
   )
 }

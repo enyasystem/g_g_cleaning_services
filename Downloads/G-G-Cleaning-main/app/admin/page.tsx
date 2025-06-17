@@ -1,14 +1,11 @@
+"use client"
+import { getClientSupabase } from "@/lib/supabase/client"
+import { useEffect, useState } from "react"
 import DashboardOverview from "@/components/admin/dashboard-overview"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "Admin Dashboard",
-  robots: {
-    index: false,
-    follow: false,
-  },
-}
 
 export default function AdminDashboardPage() {
+  // Example: You can fetch dashboard data here if needed
+  // const [data, setData] = useState<any[]>([])
+  // useEffect(() => { ... }, [])
   return <DashboardOverview />
 }

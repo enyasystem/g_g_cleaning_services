@@ -78,3 +78,60 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Carousel dots fix for mobile */
+.embla__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.embla__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d1d5db; /* Tailwind's bg-muted */
+  border: none;
+  padding: 0;
+  transition: background 0.2s;
+}
+.embla__dot.is-selected {
+  background: #3C4E76; /* Your brand color */
+}
+@media (max-width: 640px) {
+  .embla__dots {
+    background: transparent !important;
+    padding: 0;
+  }
+  .embla__dot {
+    background: #d1d5db;
+  }
+}
+
+/* Embla Carousel styles */
+.embla {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 0;
+}
+.embla__container {
+  display: flex;
+  height: 100vh;
+}
+.embla__slide {
+  position: relative;
+  min-width: 100vw;
+  height: 100vh;
+  flex: 0 0 100vw;
+}
+@media (max-width: 640px) {
+  .embla, .embla__container, .embla__slide {
+    width: 100vw;
+    height: 100vh;
+    min-width: 100vw;
+    min-height: 100vh;
+  }
+}

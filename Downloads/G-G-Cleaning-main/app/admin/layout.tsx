@@ -1,6 +1,5 @@
 import type React from "react"
-import { cookies } from "next/headers"
-import { SidebarProvider } from "@/components/ui/sidebar" // Assuming this path based on shadcn docs
+import { SidebarProvider } from "@/components/ui/sidebar"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import AdminHeader from "@/components/admin/admin-header"
 
@@ -9,8 +8,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = cookies()
-  const defaultOpen = cookieStore.get("sidebar:state")?.value === "true" // [^2]
+  const defaultOpen = true // or false, as you prefer
 
   return (
     <SidebarProvider defaultOpen={defaultOpen}>

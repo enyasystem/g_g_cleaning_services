@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
-import { createBooking } from "@/app/actions/booking-actions"
+import { getClientSupabase } from "@/lib/supabase/client"
 
 const bookingFormSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters."),
@@ -34,9 +34,9 @@ const serviceTypes = [
   "Residential Cleaning",
   "Commercial Cleaning",
   "Deep Cleaning",
-  "Window Cleaning",
-  "Garden Maintenance",
-  "Handyman Services",
+  // "Window Cleaning",
+  // "Garden Maintenance",
+  // "Handyman Services",
 ]
 
 const timeSlots = ["09:00 AM - 11:00 AM", "11:00 AM - 01:00 PM", "01:00 PM - 03:00 PM", "03:00 PM - 05:00 PM"]
@@ -44,6 +44,7 @@ const timeSlots = ["09:00 AM - 11:00 AM", "11:00 AM - 01:00 PM", "01:00 PM - 03:
 export default function BookingForm() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false)
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -55,21 +56,33 @@ export default function BookingForm() {
     },
   })
 
-  async function onSubmit(data: BookingFormValues) {
+  const onSubmit = async (data: BookingFormValues) => {
     setIsSubmitting(true)
-    const result = await createBooking(data)
-
-    if (result.success) {
+    const supabase = getClientSupabase()
+    const { error } = await supabase.from("bookings").insert([
+      {
+        full_name: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        service_type: data.serviceType,
+        preferred_date: data.preferredDate,
+        preferred_time: data.preferredTime,
+        notes: data.notes,
+        status: "Pending",
+      }
+    ])
+    if (!error) {
       toast({
         title: "Booking Submitted!",
-        description: result.message,
+        description: "Your booking has been received.",
         variant: "default",
       })
       form.reset()
     } else {
       toast({
         title: "Submission Failed",
-        description: result.message,
+        description: error.message,
         variant: "destructive",
       })
     }
@@ -166,7 +179,7 @@ export default function BookingForm() {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Preferred Date</FormLabel>
-                <Popover>
+                <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
@@ -183,8 +196,14 @@ export default function BookingForm() {
                     <Calendar
                       mode="single"
                       selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))}
+                      onSelect={(date) => {
+                        field.onChange(date)
+                        setDatePopoverOpen(false)
+                      }}
+                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                      modifiersClassNames={{
+                        disabled: "bg-muted text-muted-foreground opacity-60 cursor-not-allowed"
+                      }}
                       initialFocus
                     />
                   </PopoverContent>

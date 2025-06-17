@@ -45,7 +45,7 @@ const slides: CarouselSlideData[] = [
     titleLine2: "With Expert Maintenance",
     subtitle: "Comprehensive commercial cleaning and maintenance to ensure a productive environment.",
     ctaText: "Get Commercial Quote",
-    ctaLink: "mailto:Gilded183@gmail.com?subject=Commercial%20Cleaning%20Quote",
+    ctaLink: "mailto:gilded183@gmail.com?subject=Commercial%20Cleaning%20Quote",
   },
   {
     id: "slide3",

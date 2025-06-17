@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import Head from "next/head"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -13,13 +14,13 @@ export const metadata: Metadata = {
     template: "%s | G&G Services",
   },
   description:
-    "Professional cleaning and maintenance services for homes and businesses in Fairfield and surrounding areas. Contact G&G for reliable cleaning, gardening, and handyman services.",
+    "Professional cleaning and maintenance services for homes and businesses in Fairfield and surrounding areas. Contact G&G for reliable cleaning, and handyman services.",
   keywords: [
     "cleaning services Fairfield",
     "maintenance services",
     "commercial cleaning",
     "residential cleaning",
-    "gardening",
+    // "gardening",
     "handyman",
   ],
   icons: {
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
     apple: "/favicon.svg",
   },
-  manifest: "/manifest.ts",
+  manifest: "/manifest.webmanifest",
   generator: "v0.dev",
   openGraph: {
     images: "/opengraph-image.svg",
@@ -51,14 +52,23 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head />
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
-        </ThemeProvider>
-      </body>
-    </html>
+    <>
+      <Head>
+        <meta property="og:title" content="G&G Cleaning and Maintenance Services" />
+        <meta property="og:description" content="Professional cleaning and maintenance services for homes and businesses." />
+        <meta property="og:image" content="/opengraph-image.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://bmeebycicmkdkidtzdxn.supabase.co" />
+      </Head>
+      <html lang="en" suppressHydrationWarning>
+        <head />
+        <body className={inter.className}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </body>
+      </html>
+    </>
   )
 }
