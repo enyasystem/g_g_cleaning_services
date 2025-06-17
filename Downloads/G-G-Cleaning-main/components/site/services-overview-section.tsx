@@ -21,23 +21,23 @@ const services = [
 		description:
 			"Thorough, top-to-bottom cleaning for a truly immaculate environment.",
 	},
-	{
-		icon: <Sun className="w-10 h-10 text-primary mb-4" />,
-		title: "Window Cleaning",
-		description:
-			"Streak-free window cleaning for sparkling clear views, inside and out.",
-	},
+	// {
+	// 	icon: <Sun className="w-10 h-10 text-primary mb-4" />,
+	// 	title: "Window Cleaning",
+	// 	description:
+	// 		"Streak-free window cleaning for sparkling clear views, inside and out.",
+	// },
 	// {
 	//   icon: <TreePine className="w-10 h-10 text-primary mb-4" />,
 	//   title: "Garden Maintenance",
 	//   description: "Keep your outdoor spaces beautiful with our expert garden care services.",
 	// },
-	{
-		icon: <Wrench className="w-10 h-10 text-primary mb-4" />,
-		title: "Handyman Services",
-		description:
-			"Reliable solutions for minor repairs and maintenance tasks around your property.",
-	},
+	// {
+	// 	icon: <Wrench className="w-10 h-10 text-primary mb-4" />,
+	// 	title: "Handyman Services",
+	// 	description:
+	// 		"Reliable solutions for minor repairs and maintenance tasks around your property.",
+	// },
 ]
 
 export default function ServicesOverviewSection() {
