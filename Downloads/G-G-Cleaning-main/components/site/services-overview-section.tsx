@@ -1,6 +1,18 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Home, Building, SprayCan, TreePine, Wrench, Sun } from "lucide-react"
 import ScrollRevealWrapper from "@/components/motion/scroll-reveal-wrapper"
+import React, { useState, useRef, useEffect } from "react"
+import {
+	Dialog,
+	DialogTrigger,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogDescription,
+	DialogClose,
+} from "@/components/ui/dialog"
 
 const services = [
 	{
@@ -40,7 +52,44 @@ const services = [
 	// },
 ]
 
+const serviceDetails = [
+	{
+		title: "Residential Cleaning",
+		details:
+			"Our residential cleaning covers bedrooms, bathrooms, kitchens, living areas, and more. We use eco-friendly products and pay attention to every detail, ensuring your home is spotless and healthy for your family.",
+	},
+	{
+		title: "Commercial Cleaning",
+		details:
+			"We provide cleaning for offices, retail spaces, and commercial properties. Our team works around your schedule to minimize disruption and deliver a professional, welcoming environment for your staff and clients.",
+	},
+	{
+		title: "Deep Cleaning",
+		details:
+			"Deep cleaning includes thorough scrubbing, dusting, and sanitizing of all surfaces, including hard-to-reach areas. Ideal for spring cleaning, move-ins/outs, or after-renovation cleanups.",
+	},
+]
+
 export default function ServicesOverviewSection() {
+	const [openIndex, setOpenIndex] = useState<number | null>(null)
+	const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+
+	useEffect(() => {
+		function handleClickOutside(event: MouseEvent) {
+			if (
+				openIndex !== null &&
+				cardRefs.current[openIndex] &&
+				!cardRefs.current[openIndex]?.contains(event.target as Node)
+			) {
+				setOpenIndex(null)
+			}
+		}
+		document.addEventListener("mousedown", handleClickOutside)
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside)
+		}
+	}, [openIndex])
+
 	return (
 		<section id="services" className="py-16 md:py-24 bg-muted/40">
 			<div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,6 +112,9 @@ export default function ServicesOverviewSection() {
 						if (service.title === "Handyman Services") {
 							cardClass += " md:col-span-2 lg:col-span-3"
 						}
+						const details =
+							serviceDetails.find(s => s.title === service.title)
+								?.details || service.description
 						return (
 							<ScrollRevealWrapper
 								key={service.title}
@@ -75,9 +127,40 @@ export default function ServicesOverviewSection() {
 										<CardTitle>{service.title}</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<p className="text-muted-foreground">
+										<p className="text-muted-foreground mb-2">
 											{service.description}
 										</p>
+										<Dialog
+											open={openIndex === index}
+											onOpenChange={open =>
+												setOpenIndex(open ? index : null)
+											}
+										>
+											<DialogTrigger asChild>
+												<button
+													className="mt-2 mb-2 px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition"
+													type="button"
+												>
+													More Info
+												</button>
+											</DialogTrigger>
+											<DialogContent>
+												<DialogHeader>
+													<DialogTitle>{service.title}</DialogTitle>
+													<DialogDescription>
+														{details}
+													</DialogDescription>
+												</DialogHeader>
+												<DialogClose asChild>
+													<button
+														className="mt-4 px-4 py-2 bg-muted text-primary rounded hover:bg-primary/10 transition"
+														type="button"
+													>
+														Close
+													</button>
+												</DialogClose>
+											</DialogContent>
+										</Dialog>
 									</CardContent>
 								</Card>
 							</ScrollRevealWrapper>
