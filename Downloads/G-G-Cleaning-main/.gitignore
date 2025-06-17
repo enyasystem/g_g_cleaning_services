@@ -28,3 +28,35 @@ next-env.d.ts
 
 # Ignore all zip files
 *.zip
+
+# Ignore build output and large files
+/out/
+/.next/
+/node_modules/
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.exe
+*.dll
+*.iso
+*.log
+*.tmp
+*.bak
+*.DS_Store
+
+# Ignore static build artifacts
+out.zip
+out (2).zip
+out (4).zip
+
+# Ignore images in build output
+/out/images/*
+
+# Ignore environment files
+.env*
