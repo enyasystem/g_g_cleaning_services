@@ -1,5 +1,5 @@
 "use client"
-import { getClientSupabase } from "@/lib/supabase/client"
+// import { getClientSupabase } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import BookingsManagement from "@/components/admin/bookings-management"
 import type { Booking } from "@/lib/data"
@@ -11,31 +11,27 @@ export default function AdminBookingsPage() {
 
   useEffect(() => {
     const fetchBookings = async () => {
-      const supabase = getClientSupabase();
-      console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log("Supabase Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .order("created_at", { ascending: false });
-      console.log("Fetched data:", data, "Error:", error);
-      if (error) {
-        setError("Error loading bookings.");
-      } else {
+      try {
+        const res = await fetch("/api/admin/bookings");
+        if (!res.ok) throw new Error("Error loading bookings.");
+        const data = await res.json();
         setBookings(
           (data || []).map((booking: any) => ({
             id: booking.id,
-            clientName: booking.full_name,
-            clientEmail: booking.email,
-            phone: booking.phone,
-            address: booking.address,
-            serviceType: booking.service_type,
-            date: booking.preferred_date,
-            time: booking.preferred_time,
+            clientName: booking.client?.name,
+            clientEmail: booking.client?.email,
+            phone: booking.client?.phone,
+            address: booking.client?.address,
+            serviceType: booking.serviceType,
+            date: booking.date,
+            time: booking.time,
             status: booking.status,
             // ...add other fields as needed
           }))
         );
+        setError(null);
+      } catch (err) {
+        setError("Error loading bookings.");
       }
       setLoading(false);
     };
