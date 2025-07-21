@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ success: true });
     response.cookies.set('admin-auth', 'true', {
       path: '/',
-      httpOnly: false, // allow client to clear on logout
+      httpOnly: true, // prevent client-side JS access
+      secure: process.env.NODE_ENV === 'production', // only send over HTTPS in production
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 // 1 week
     });
