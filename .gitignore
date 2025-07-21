@@ -1,0 +1,64 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Ignore all zip files
+*.zip
+
+# Ignore build output and large files
+/out/
+/.next/
+/node_modules/
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.exe
+*.dll
+*.iso
+*.log
+*.tmp
+*.bak
+*.DS_Store
+
+# Ignore static build artifacts
+out.zip
+out (2).zip
+out (4).zip
+
+# Ignore images in build output
+/out/images/*
+
+# Ignore environment files
+.env*
+
+/lib/generated/prisma
