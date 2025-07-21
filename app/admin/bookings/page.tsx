@@ -13,8 +13,26 @@ export default function AdminBookingsPage() {
     const fetchBookings = async () => {
       try {
         const res = await fetch("/api/admin/bookings");
-        if (!res.ok) throw new Error("Error loading bookings.");
-        const data = await res.json();
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await res.text();
+          setError(`API did not return JSON. Status: ${res.status}. Response: ${text.slice(0, 200)}`);
+          setLoading(false);
+          return;
+        }
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          setError(`Error parsing response JSON: ${jsonErr}`);
+          setLoading(false);
+          return;
+        }
+        if (!res.ok) {
+          setError(data?.error ? `API Error: ${data.error}` : `Error loading bookings. Status: ${res.status}`);
+          setLoading(false);
+          return;
+        }
         setBookings(
           (data || []).map((booking: any) => ({
             id: booking.id,
@@ -31,14 +49,13 @@ export default function AdminBookingsPage() {
         );
         setError(null);
       } catch (err) {
-        setError("Error loading bookings.");
+        setError(`Network or fetch error: ${err instanceof Error ? err.message : String(err)}`);
       }
       setLoading(false);
     };
     fetchBookings();
   }, [])
 
-  if (loading) return <div>Loading bookings...</div>
-  if (error) return <div>{error}</div>
-  return <BookingsManagement initialBookings={bookings} />
+  if (loading) return <div>Loading bookings...</div>;
+  return <BookingsManagement initialBookings={bookings} error={error ?? undefined} />;
 }

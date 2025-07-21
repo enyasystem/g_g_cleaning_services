@@ -1,16 +1,12 @@
-"use client"
-import { getClientSupabase } from "@/lib/supabase/client"
 
 export async function getRecentBookings(limit = 5) {
-  const supabase = getClientSupabase()
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit)
-  if (error) {
+  try {
+    const res = await fetch(`/api/admin/bookings?limit=${limit}`)
+    if (!res.ok) throw new Error("Error loading bookings.")
+    const data = await res.json()
+    return data || []
+  } catch (error) {
     console.error("Error fetching recent bookings:", error)
     return []
   }
-  return data || []
 }

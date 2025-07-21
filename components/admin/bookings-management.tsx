@@ -35,7 +35,9 @@ import { useTableControls, type SortConfig } from "@/hooks/use-table-controls"
 import { DataTablePagination } from "./data-table-pagination"
 import { format, isValid, parseISO } from "date-fns"
 import type { DateRange } from "react-day-picker"
-import { deleteBooking, updateBookingStatus } from "@/app/actions/booking-actions" // Import new server actions
+
+
+import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
 // Helper to create sortable table headers
@@ -61,11 +63,19 @@ const SortableTableHead = ({
 )
 
 interface BookingsManagementProps {
-  initialBookings: Booking[]
+  initialBookings: Booking[];
+  error?: string;
 }
 
-export default function BookingsManagement({ initialBookings }: BookingsManagementProps) {
+
+
+
+function BookingsManagement({ initialBookings, error }: BookingsManagementProps) {
+  if (error) {
+    return <div style={{ color: 'red', fontWeight: 'bold', padding: 16 }}>Error: {error}</div>;
+  }
   const { toast } = useToast()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("all")
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
@@ -73,6 +83,9 @@ export default function BookingsManagement({ initialBookings }: BookingsManageme
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null)
+
+  // Local state for all bookings
+  const [allBookings, setAllBookings] = useState<Booking[]>(initialBookings)
 
   const {
     paginatedData: filteredBookings,
@@ -90,21 +103,19 @@ export default function BookingsManagement({ initialBookings }: BookingsManageme
     updateData: updateBookingsData,
     filteredDataCount,
   } = useTableControls<Booking>({
-    initialData: initialBookings, // Use initialBookings from props
+    initialData: allBookings,
     initialItemsPerPage: 5,
     dateKeys: ["date"],
   })
 
-  // Update the hook's internal data when initialBookings prop changes
+  // Keep allBookings in sync with initialBookings prop
   useEffect(() => {
     setIsLoading(true)
-    // Simulate a slight delay for loading state, then update with actual data
-    const timer = setTimeout(() => {
-      updateBookingsData(initialBookings)
-      setIsLoading(false)
-    }, 500) // Reduced delay for quicker feedback
-    return () => clearTimeout(timer)
-  }, [initialBookings, updateBookingsData])
+    setAllBookings(initialBookings)
+    updateBookingsData(initialBookings)
+    setIsLoading(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialBookings])
 
   const bookingsToDisplay = filteredBookings.filter((booking) => {
     const statusMatch = statusFilter === "all" || booking.status.toLowerCase() === statusFilter
@@ -120,45 +131,88 @@ export default function BookingsManagement({ initialBookings }: BookingsManageme
     return statusMatch && dateMatch
   })
 
+  // Handler functions moved inside the component
   const handleDeleteBooking = async () => {
     if (selectedBookingId) {
-      setIsLoading(true) // Show loading state during deletion
-      const result = await deleteBooking(selectedBookingId)
-      if (result.success) {
-        toast({ title: "Success", description: result.message })
-      } else {
-        toast({ title: "Error", description: result.message, variant: "destructive" })
+      setIsLoading(true)
+      try {
+        const res = await fetch("/api/admin/bookings/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: selectedBookingId }),
+        })
+        const result = await res.json()
+        if (result.success) {
+          toast({ title: "Success", description: result.message })
+          // Remove the deleted booking from allBookings and update table
+          const updated = allBookings.filter((booking): booking is Booking => booking.id !== selectedBookingId)
+          setAllBookings(updated)
+          updateBookingsData(updated)
+          window.location.reload()
+        } else {
+          toast({ title: "Error", description: result.message, variant: "destructive" })
+        }
+      } catch (err: any) {
+        toast({ title: "Error", description: err?.message || "Failed to delete booking.", variant: "destructive" })
       }
       setShowDeleteDialog(false)
       setSelectedBookingId(null)
-      // Data will be revalidated by revalidatePath in the server action
-      // No need to manually update local state here as the page will re-render with fresh data
     }
   }
 
   const handleUpdateStatus = async (id: string, newStatus: Booking["status"]) => {
-    setIsLoading(true) // Show loading state during update
-    const result = await updateBookingStatus(id, newStatus)
-    if (result.success) {
-      toast({ title: "Success", description: result.message })
-    } else {
-      toast({ title: "Error", description: result.message, variant: "destructive" })
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/admin/bookings/update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, newStatus }),
+      })
+      const result = await res.json()
+      if (result.success) {
+        toast({ title: "Success", description: result.message })
+        // Update the booking status in allBookings and update table
+        const updated = allBookings.map((booking): Booking =>
+          booking.id === id ? { ...booking, status: newStatus as Booking["status"] } : booking
+        )
+        setAllBookings(updated)
+        updateBookingsData(updated)
+        window.location.reload()
+      } else {
+        toast({ title: "Error", description: result.message, variant: "destructive" })
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err?.message || "Failed to update booking status.", variant: "destructive" })
     }
-    // Data will be revalidated by revalidatePath in the server action
   }
 
   const handleCancelBookingStatus = async () => {
     if (selectedBookingId) {
-      setIsLoading(true) // Show loading state during cancellation
-      const result = await updateBookingStatus(selectedBookingId, "Cancelled")
-      if (result.success) {
-        toast({ title: "Success", description: result.message })
-      } else {
-        toast({ title: "Error", description: result.message, variant: "destructive" })
+      setIsLoading(true)
+      try {
+        const res = await fetch("/api/admin/bookings/update-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: selectedBookingId, newStatus: "Cancelled" }),
+        })
+        const result = await res.json()
+        if (result.success) {
+          toast({ title: "Success", description: result.message })
+          // Update the booking status in allBookings and update table
+          const updated = allBookings.map((booking): Booking =>
+            booking.id === selectedBookingId ? { ...booking, status: "Cancelled" as Booking["status"] } : booking
+          )
+          setAllBookings(updated)
+          updateBookingsData(updated)
+          window.location.reload()
+        } else {
+          toast({ title: "Error", description: result.message, variant: "destructive" })
+        }
+      } catch (err: any) {
+        toast({ title: "Error", description: err?.message || "Failed to cancel booking.", variant: "destructive" })
       }
       setShowCancelDialog(false)
       setSelectedBookingId(null)
-      // Data will be revalidated by revalidatePath in the server action
     }
   }
 
@@ -441,3 +495,6 @@ export default function BookingsManagement({ initialBookings }: BookingsManageme
     </div>
   )
 }
+
+export default BookingsManagement;
+          

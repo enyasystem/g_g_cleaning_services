@@ -22,9 +22,16 @@ export async function POST(req: NextRequest) {
       console.log("[DEBUG] Invalid credentials for email:", email);
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
-    // Optionally, set a session/cookie here
+    // Set a cookie for authentication
     console.log("[DEBUG] Admin login successful for:", email);
-    return NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('admin-auth', 'true', {
+      path: '/',
+      httpOnly: false, // allow client to clear on logout
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 1 week
+    });
+    return response;
   } catch (error) {
     console.error("[DEBUG] Admin login server error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

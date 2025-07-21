@@ -1,25 +1,14 @@
-import { getClientSupabase } from "@/lib/supabase/client"
 import type { Client } from "@/lib/data"
 
+// Fetch clients from the new API route (MySQL/Prisma powered)
 export async function getAllClients(): Promise<Client[]> {
-  const supabase = getClientSupabase()
-  const { data, error } = await supabase
-    .from("clients")
-    .select("*, bookings(count)")
-    .order("name", { ascending: true })
-
-  if (error) {
+  try {
+    const res = await fetch("/api/admin/clients")
+    if (!res.ok) throw new Error("Error loading clients.")
+    const data = await res.json()
+    return data || []
+  } catch (error) {
     console.error("Error fetching clients:", error)
     return []
   }
-
-  // Map DB fields to Client interface
-  return (data || []).map((client: any) => ({
-    id: client.id,
-    name: client.name,
-    email: client.email,
-    phone: client.phone,
-    totalBookings: client.bookings ? client.bookings.length : 0,
-    lastBookingDate: client.last_booking_date || undefined,
-  }))
 }

@@ -16,17 +16,20 @@ import { getAllClients } from "@/lib/get-all-clients"
 import { Input } from "@/components/ui/input"
 import { type Client } from "@/lib/data"
 
-export default function ClientsManagement() {
+
+// Accept error prop from parent
+export default function ClientsManagement({ error }: { error?: string }) {
   const [clients, setClients] = useState<Client[]>([])
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
     async function fetchClients() {
+      if (error) return; // Don't fetch if error is present
       const data = await getAllClients()
       setClients(data)
     }
     fetchClients()
-  }, [])
+  }, [error])
 
   const filteredClients = clients.filter(
     (client) =>
@@ -41,6 +44,9 @@ export default function ClientsManagement() {
     setClients((prev) => prev.filter((c) => c.id !== id))
   }
 
+  if (error) {
+    return <div style={{ color: 'red', fontWeight: 'bold', padding: 16 }}>Error: {error}</div>;
+  }
   return (
     <div className="space-y-6">
       <Card>

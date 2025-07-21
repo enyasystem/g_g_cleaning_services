@@ -1,5 +1,5 @@
 "use client"
-import { getClientSupabase } from "@/lib/supabase/client"
+// import { getClientSupabase } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import ClientsManagement from "@/components/admin/clients-management"
 import type { Client } from "@/lib/data"
@@ -11,31 +11,38 @@ export default function AdminClientsPage() {
 
   useEffect(() => {
     const fetchClients = async () => {
-      const supabase = getClientSupabase()
-      const { data, error } = await supabase
-        .from("clients")
-        .select("*, bookings(count)")
-        .order("name", { ascending: true })
-      if (error) {
-        setError("Error loading clients.")
-      } else {
-        setClients(
-          (data || []).map((client: any) => ({
-            id: client.id,
-            name: client.name,
-            email: client.email,
-            phone: client.phone,
-            totalBookings: client.bookings ? client.bookings.length : 0,
-            lastBookingDate: client.last_booking_date || undefined,
-          }))
-        )
+      try {
+        const res = await fetch("/api/admin/clients");
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await res.text();
+          setError(`API did not return JSON. Status: ${res.status}. Response: ${text.slice(0, 200)}`);
+          setLoading(false);
+          return;
+        }
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          setError(`Error parsing response JSON: ${jsonErr}`);
+          setLoading(false);
+          return;
+        }
+        if (!res.ok) {
+          setError(data?.error ? `API Error: ${data.error}` : `Error loading clients. Status: ${res.status}`);
+          setLoading(false);
+          return;
+        }
+        setClients(data || []);
+        setError(null);
+      } catch (err) {
+        setError(`Network or fetch error: ${err instanceof Error ? err.message : String(err)}`);
       }
-      setLoading(false)
-    }
-    fetchClients()
+      setLoading(false);
+    };
+    fetchClients();
   }, [])
 
   if (loading) return <div>Loading clients...</div>
-  if (error) return <div>{error}</div>
-  return <ClientsManagement />
+  return <ClientsManagement error={error ?? undefined} />
 }

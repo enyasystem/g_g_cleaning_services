@@ -1,27 +1,35 @@
-"use client"
-import { useState, useEffect } from "react"
-import AdminLogin from "@/components/admin/admin-login"
-import DashboardOverview from "@/components/admin/dashboard-overview"
+"use client";
+import DashboardOverview from "@/components/admin/dashboard-overview";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+function GlobalLoadingSpinner() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80">
+      <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent" role="status" aria-label="Loading" />
+    </div>
+  );
+}
 
 export default function AdminDashboardPage() {
-  const [authenticated, setAuthenticated] = useState(false)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Check localStorage for persisted login
-    if (typeof window !== "undefined" && localStorage.getItem("admin-auth") === "true") {
-      setAuthenticated(true)
-    }
-  }, [])
+  const handleLogout = async () => {
+    setLoading(true);
+    // Remove cookie via API route
+    await fetch("/api/admin/logout", { method: "POST" });
+    setLoading(false);
+    router.push("/admin-login");
+  };
 
-  function handleLogin() {
-    setAuthenticated(true)
-    if (typeof window !== "undefined") {
-      localStorage.setItem("admin-auth", "true")
-    }
-  }
-
-  if (!authenticated) {
-    return <AdminLogin onLogin={handleLogin} />
-  }
-  return <DashboardOverview />
+  return (
+    <>
+      {loading && <GlobalLoadingSpinner />}
+      <div className="flex justify-end p-4">
+        <button onClick={handleLogout} className="bg-destructive text-white px-4 py-2 rounded hover:bg-destructive/90 transition">Logout</button>
+      </div>
+      <DashboardOverview />
+    </>
+  );
 }
