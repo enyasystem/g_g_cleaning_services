@@ -8,34 +8,15 @@ import { ArrowUpRight, CalendarCheck, Users, DollarSign, ClipboardList } from "l
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import type { Booking } from "@/lib/data"
-import { getClientSupabase } from "@/lib/supabase/client"
+
 
 export default function DashboardOverview() {
   const [recentBookings, setRecentBookings] = useState<Booking[]>([])
 
   useEffect(() => {
     async function fetchBookings() {
-      const supabase = getClientSupabase()
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(5)
-      if (!error && data) {
-        setRecentBookings(
-          data.map((booking: any) => ({
-            id: booking.id,
-            clientName: booking.full_name,
-            clientEmail: booking.email,
-            serviceType: booking.service_type,
-            date: booking.preferred_date,
-            time: booking.preferred_time,
-            status: booking.status,
-            amount: booking.amount ? `₦${Number(booking.amount).toLocaleString()}` : "₦0.00",
-            notes: booking.notes,
-          }))
-        )
-      }
+      // TODO: Replace with real API call to fetch recent bookings from MySQL/Prisma
+      setRecentBookings([])
     }
     fetchBookings()
   }, [])
