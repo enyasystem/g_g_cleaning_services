@@ -62,3 +62,18 @@ out (4).zip
 .env*
 
 /lib/generated/prisma
+.vscode/
+# Ignore IDE specific files
+.idea/
+*.sublime-workspace
+*.sublime-project       
+# Ignore editor specific files
+*.swp
+*.swo
+*.bak
+*.tmp   
+.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z    
