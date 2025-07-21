@@ -19,20 +19,20 @@ export async function POST(req: NextRequest) {
     }
     const data = await req.json();
     console.log("[DEBUG] Incoming booking data:", data);
-    // Find or create client by email
-    let client = await prisma.client.findUnique({ where: { email: data.email } });
-    if (!client) {
-      client = await prisma.client.create({
-        data: {
-          name: data.fullName,
-          email: data.email,
-          phone: data.phone,
-        },
-      });
-      console.log("[DEBUG] Created new client:", client);
-    } else {
-      console.log("[DEBUG] Found existing client:", client);
-    }
+    // Upsert client by email (insert or update name/phone if changed)
+    const client = await prisma.client.upsert({
+      where: { email: data.email },
+      update: {
+        name: data.fullName,
+        phone: data.phone,
+      },
+      create: {
+        name: data.fullName,
+        email: data.email,
+        phone: data.phone,
+      },
+    });
+    console.log("[DEBUG] Upserted client:", client);
     // Create booking
     const booking = await prisma.booking.create({
       data: {
