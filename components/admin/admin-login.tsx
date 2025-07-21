@@ -1,21 +1,30 @@
 "use client";
 import { useState } from "react";
 
-const USERNAME = "admin";
-const PASSWORD = "password123";
+
 
 export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (username === USERNAME && password === PASSWORD) {
-      setError("");
-      onLogin();
-    } else {
-      setError("Invalid credentials");
+    setError("");
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: username, password }),
+      });
+      if (res.ok) {
+        onLogin();
+      } else {
+        const data = await res.json();
+        setError(data.error || "Invalid credentials");
+      }
+    } catch (err) {
+      setError("Network error");
     }
   }
 
@@ -27,10 +36,10 @@ export default function AdminLogin({ onLogin }: { onLogin: () => void }) {
       >
         <h2 className="text-2xl font-bold mb-6 text-center text-primary">Admin Login</h2>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1 text-foreground">Username</label>
+          <label className="block text-sm font-medium mb-1 text-foreground">Email</label>
           <input
             className="w-full px-3 py-2 border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            type="text"
+            type="email"
             value={username}
             onChange={e => setUsername(e.target.value)}
             autoFocus
