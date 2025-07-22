@@ -79,11 +79,24 @@ export default function AdminSidebar() {
           ))}
           <SidebarMenuItem>
             <SidebarMenuButton
+              tooltip={{ children: "Home", side: "right", align: "center" }}
+              asChild
+              className="bg-primary text-white hover:bg-primary/90 transition font-semibold"
+            >
+              <Link href="/">
+                <SprayCan className="h-5 w-5" />
+                <span className="group-data-[collapsible=icon]:hidden">Main Site</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
               tooltip={{ children: "Logout", side: "right", align: "center" }}
               onClick={async () => {
                 await fetch("/api/admin/logout", { method: "POST" });
                 window.location.href = "/admin-login";
               }}
+              className="bg-destructive text-white hover:bg-destructive/90 transition font-semibold"
             >
               <LogOut className="h-5 w-5" />
               <span className="group-data-[collapsible=icon]:hidden">Logout</span>

@@ -26,7 +26,14 @@ export default function AdminDashboardPage() {
   return (
     <>
       {loading && <GlobalLoadingSpinner />}
-      <div className="flex justify-end p-4">
+      <div className="flex justify-between items-center p-4">
+        <a
+          href="/"
+          className="inline-block px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition font-semibold shadow focus:outline-none focus:ring-2 focus:ring-primary"
+          aria-label="Go back to main site"
+        >
+          ← Back to Main Site
+        </a>
         <button onClick={handleLogout} className="bg-destructive text-white px-4 py-2 rounded hover:bg-destructive/90 transition">Logout</button>
       </div>
       <DashboardOverview />

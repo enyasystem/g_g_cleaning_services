@@ -14,14 +14,25 @@ function GlobalLoadingSpinner() {
 export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   return (
-    <>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-muted/40">
       {loading && <GlobalLoadingSpinner />}
-      <AdminLogin onLogin={() => {
-        setLoading(true);
-        setTimeout(() => {
-          window.location.href = "/admin";
-        }, 800);
-      }} />
-    </>
+      <div className="w-full max-w-md">
+        <AdminLogin onLogin={() => {
+          setLoading(true);
+          setTimeout(() => {
+            window.location.href = "/admin";
+          }, 800);
+        }} />
+        <div className="mt-6 flex justify-center">
+          <a
+            href="/"
+            className="inline-block px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition font-semibold shadow focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-label="Go back to main site"
+          >
+            ← Back to Main Site
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }
