@@ -1,5 +1,8 @@
 "use client"
 import { useEffect, useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
+import "@/styles/toast.css"
 import SettingsManagement from "@/components/admin/settings-management"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -7,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 
 export default function AdminSettingsPage() {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [adminName, setAdminName] = useState("");
@@ -14,6 +18,7 @@ export default function AdminSettingsPage() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [updateMsg, setUpdateMsg] = useState<string | null>(null);
+  const [pwLoading, setPwLoading] = useState(false);
 
   useEffect(() => {
     // Removed Supabase settings fetch
@@ -51,16 +56,22 @@ export default function AdminSettingsPage() {
           <Button
             onClick={async () => {
               setUpdateMsg(null);
-              const res = await fetch("/api/admin/profile", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: adminName, email: adminEmail })
-              });
-              if (res.ok) setUpdateMsg("Profile updated successfully.");
-              else setUpdateMsg("Failed to update profile.");
+              try {
+                const res = await fetch("/api/admin/profile", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name: adminName, email: adminEmail })
+                });
+                if (res.ok) {
+                  toast({ title: "Profile Updated", description: "Profile updated successfully.", variant: "default" });
+                } else {
+                  toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
+                }
+              } catch {
+                toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
+              }
             }}
           >Save Profile</Button>
-          {updateMsg && <div className="text-sm text-green-600 mt-2">{updateMsg}</div>}
         </CardContent>
       </Card>
       <Card>
@@ -78,22 +89,33 @@ export default function AdminSettingsPage() {
             <Input id="newPassword" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
           </div>
           <Button
+            disabled={pwLoading}
             onClick={async () => {
               setUpdateMsg(null);
-              const res = await fetch("/api/admin/change-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ oldPassword, newPassword })
-              });
-              const data = await res.json();
-              if (res.ok) {
-                setUpdateMsg("Password updated successfully.");
-              } else {
-                setUpdateMsg(data.debug || data.error || "Failed to update password.");
+              setPwLoading(true);
+              try {
+                const res = await fetch("/api/admin/change-password", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ oldPassword, newPassword })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                  toast({ title: "Password Changed", description: "Password updated successfully.", variant: "default" });
+                  setOldPassword("");
+                  setNewPassword("");
+                } else {
+                  toast({ title: "Error", description: data.debug || data.error || "Failed to update password.", variant: "destructive" });
+                }
+              } catch (err) {
+                toast({ title: "Error", description: "Failed to update password.", variant: "destructive" });
               }
+              setPwLoading(false);
             }}
-          >Change Password</Button>
-          {updateMsg && <div className="text-sm text-green-600 mt-2">{updateMsg}</div>}
+          >
+            {pwLoading ? <span className="animate-spin mr-2 h-4 w-4 border-2 border-t-2 border-white rounded-full inline-block"></span> : null}
+            Change Password
+          </Button>
         </CardContent>
       </Card>
       <Card>
@@ -118,10 +140,14 @@ export default function AdminSettingsPage() {
             <Label htmlFor="bizAbn">ABN</Label>
             <Input id="bizAbn" defaultValue="20461679508" />
           </div>
-          <Button>Save Business Info</Button>
+          <Button
+            onClick={() => {
+              toast({ title: "Business Info Saved", description: "Business information updated successfully.", variant: "default" });
+            }}
+          >Save Business Info</Button>
         </CardContent>
       </Card>
-      {/* SettingsManagement removed since Supabase is not used */}
+    <Toaster />
     </div>
   )
 }

@@ -14,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar" // Corrected import: added c
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
+import "@/styles/toast.css"
 import { useState } from "react"
 
 

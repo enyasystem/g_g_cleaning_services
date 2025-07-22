@@ -2,6 +2,8 @@
 import DashboardOverview from "@/components/admin/dashboard-overview";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 function GlobalLoadingSpinner() {
   return (
@@ -12,19 +14,23 @@ function GlobalLoadingSpinner() {
 }
 
 export default function AdminDashboardPage() {
+  const { toast } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
     setLoading(true);
-    // Remove cookie via API route
     await fetch("/api/admin/logout", { method: "POST" });
     setLoading(false);
-    router.push("/admin-login");
+    toast({ title: "Logged out", description: "You have been logged out.", variant: "default" });
+    setTimeout(() => {
+      router.push("/admin-login");
+    }, 1200);
   };
 
   return (
     <>
+      <Toaster />
       {loading && <GlobalLoadingSpinner />}
       <div className="flex justify-between items-center p-4">
         <a

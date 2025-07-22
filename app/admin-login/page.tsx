@@ -1,5 +1,6 @@
 "use client";
 import AdminLogin from "@/components/admin/admin-login";
+import { Toaster } from "@/components/ui/toaster";
 
 import { useState } from "react";
 
@@ -17,12 +18,15 @@ export default function AdminLoginPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-muted/40">
       {loading && <GlobalLoadingSpinner />}
       <div className="w-full max-w-md">
-        <AdminLogin onLogin={() => {
-          setLoading(true);
-          setTimeout(() => {
-            window.location.href = "/admin";
-          }, 800);
-        }} />
+        <AdminLogin
+          onLogin={() => {
+            setLoading(true);
+            setTimeout(() => {
+              window.location.href = "/admin";
+            }, 800);
+          }}
+          showToast
+        />
         <div className="mt-6 flex justify-center">
           <a
             href="/"
@@ -33,6 +37,7 @@ export default function AdminLoginPage() {
           </a>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

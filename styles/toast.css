@@ -1,0 +1,19 @@
+.group[data-state="open"]:not(.destructive) {
+  background: #22c55e !important;
+  color: #fff !important;
+}
+.toast-root {
+  z-index: 9999;
+}
+.toast-default {
+  background: #22c55e;
+  color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.toast-error {
+  background: #ef4444;
+  color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
