@@ -36,9 +36,12 @@ export default function AdminHeader() {
           </DropdownMenuItem>
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/">Logout (Site Home)</Link>
-          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={async () => {
+              await fetch("/api/admin/logout", { method: "POST" });
+              window.location.href = "/admin-login";
+            }}
+          >Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
