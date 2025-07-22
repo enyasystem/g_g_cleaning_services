@@ -4,7 +4,9 @@ const prisma = new PrismaClient();
 
 async function main() {
   const email = "info@ggcleanexperts.com";
-  const password = "password"; // Change after first login!
+  const rawPassword = "password"; // Change after first login!
+  const bcrypt = require("bcryptjs");
+  const password = bcrypt.hashSync(rawPassword, 10);
 
   const existing = await prisma.admin.findUnique({ where: { email } });
   if (existing) {
@@ -14,6 +16,7 @@ async function main() {
 
   const admin = await prisma.admin.create({
     data: {
+      name: "Admin", // Set a default name
       email,
       password,
     },
