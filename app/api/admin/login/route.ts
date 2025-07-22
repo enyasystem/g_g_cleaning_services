@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -9,18 +10,27 @@ export async function POST(req: NextRequest) {
     const { email, password } = await req.json();
     console.log("[DEBUG] Received login payload:", { email });
     if (!email || !password) {
-      console.log("[DEBUG] Missing email or password");
-      return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+      const debugMsg = !email && !password
+        ? "Missing both email and password."
+        : !email
+        ? "Missing email."
+        : "Missing password.";
+      console.log(`[DEBUG] ${debugMsg}`);
+      return NextResponse.json({ error: "Email and password are required.", debug: debugMsg }, { status: 400 });
     }
     const admin = await prisma.admin.findUnique({ where: { email } });
     if (!admin) {
-      console.log("[DEBUG] No admin found for email:", email);
+      const debugMsg = `No admin found for email: ${email}`;
+      console.log(`[DEBUG] ${debugMsg}`);
+      return NextResponse.json({ error: "Invalid credentials", debug: debugMsg }, { status: 401 });
     } else {
       console.log("[DEBUG] Admin found:", admin.email);
     }
-    if (!admin || admin.password !== password) {
-      console.log("[DEBUG] Invalid credentials for email:", email);
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    const isMatch = bcrypt.compareSync(password, admin.password);
+    if (!isMatch) {
+      const debugMsg = "Incorrect password.";
+      console.log(`[DEBUG] ${debugMsg} for email: ${email}`);
+      return NextResponse.json({ error: "Invalid credentials", debug: debugMsg }, { status: 401 });
     }
     // Set a cookie for authentication
     console.log("[DEBUG] Admin login successful for:", email);

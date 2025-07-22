@@ -85,8 +85,12 @@ export default function AdminSettingsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ oldPassword, newPassword })
               });
-              if (res.ok) setUpdateMsg("Password updated successfully.");
-              else setUpdateMsg("Failed to update password.");
+              const data = await res.json();
+              if (res.ok) {
+                setUpdateMsg("Password updated successfully.");
+              } else {
+                setUpdateMsg(data.debug || data.error || "Failed to update password.");
+              }
             }}
           >Change Password</Button>
           {updateMsg && <div className="text-sm text-green-600 mt-2">{updateMsg}</div>}
