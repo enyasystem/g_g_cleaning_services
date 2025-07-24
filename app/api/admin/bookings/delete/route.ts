@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -32,3 +33,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, message: error?.message || "Failed to delete booking.", debug: error?.stack }, { status: 500 });
   }
 }
+
+// Add default export for Next.js API route compatibility
+export default POST;
