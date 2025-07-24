@@ -1,5 +1,5 @@
 "use client"
-import { getClientSupabase } from "@/lib/supabase/client"
+// import { getClientSupabase } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
 import BookingForm from "@/components/booking/booking-form"
 import Navbar from "@/components/site/navbar"
