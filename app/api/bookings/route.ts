@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import nodemailer from "nodemailer";
 
 let prisma: PrismaClient | null = null;
 try {
@@ -46,6 +47,28 @@ export async function POST(req: NextRequest) {
       },
     });
     console.log("[DEBUG] Created booking:", booking);
+
+    // Send email notification to admin
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail", // Use Gmail for free, or change to another SMTP
+        auth: {
+          user: process.env.ADMIN_EMAIL || "info@ggcleanexperts.com", // admin email
+          pass: process.env.ADMIN_EMAIL_PASS || "your-app-password-here" // use app password for Gmail
+        }
+      });
+      const mailOptions = {
+        from: `G&G Cleaning <${process.env.ADMIN_EMAIL || "info@ggcleanexperts.com"}>`,
+        to: process.env.ADMIN_EMAIL || "info@ggcleanexperts.com",
+        subject: "New Booking Received",
+        text: `A new booking has been made:\n\nName: ${data.fullName}\nEmail: ${data.email}\nPhone: ${data.phone}\nService: ${data.serviceType}\nDate: ${data.preferredDate}\nTime: ${data.preferredTime}\nNotes: ${data.notes}`,
+      };
+      await transporter.sendMail(mailOptions);
+      console.log("[DEBUG] Admin notification email sent.");
+    } catch (emailError) {
+      console.error("[DEBUG] Failed to send admin notification email:", emailError);
+    }
+
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
     console.error("[DEBUG] Booking creation error:", error);
