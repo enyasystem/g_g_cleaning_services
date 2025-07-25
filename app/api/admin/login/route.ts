@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error) {
     console.error("[DEBUG] Admin login server error:", error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    // Safely cast error to any to access message and stack
+    const err = error as any;
+    return NextResponse.json({ error: err?.message || "Server error", debug: err?.stack || String(error) }, { status: 500 });
   }
 }
