@@ -67,8 +67,8 @@ export async function POST(req: NextRequest) {
       const mailOptions = {
         from: `G&G Cleaning <${process.env.ADMIN_EMAIL || "info@ggcleanexperts.com"}>`,
         to: process.env.ADMIN_EMAIL || "info@ggcleanexperts.com",
-        subject: "New Booking Received",
-        text: `A new booking has been made:\n\nName: ${data.fullName}\nEmail: ${data.email}\nPhone: ${data.phone}\nService: ${data.serviceType}\nDate: ${displayDate}\nTime: ${data.preferredTime}\nNotes: ${data.notes}`,
+        subject: "New Booking Received GGCLEANEXPERTS.COM",
+        text: `A new booking has been made from your website:\n\nName: ${data.fullName}\nEmail: ${data.email}\nPhone: ${data.phone}\nService: ${data.serviceType}\nDate: ${displayDate}\nTime: ${data.preferredTime}\nNotes: ${data.notes}`,
       };
       await transporter.sendMail(mailOptions);
       console.log("[DEBUG] Admin notification email sent.");

@@ -19,13 +19,7 @@ const slides = [
     content: (
       <img src="https://dbcinformatiesysteem.nl/wp-content/uploads/2023/02/schoonmaak-3-2048x1366.jpg" alt="European woman cleaning window" className="w-full h-full object-cover" />
     )
-  },
-  {
-    content: (
-      <img src="https://www.feelinspiredblog.com/wp-content/uploads/2022/10/Cleaning-Service-201709-001.jpg" alt="Cleaning Service" className="w-full h-full object-cover" />
-    )
-  },
- 
+  }, 
  
 ]
 

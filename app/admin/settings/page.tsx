@@ -130,7 +130,7 @@ export default function AdminSettingsPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="bizEmail">Email</Label>
-            <Input id="bizEmail" type="email" defaultValue="Gilded183@gmail.com" />
+            <Input id="bizEmail" type="email" defaultValue="gngcleaningsercices@outlook.com" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="bizPhone">Phone</Label>
