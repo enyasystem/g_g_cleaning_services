@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "serve-static": "npx serve out"
+    "serve-static": "npx serve out",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
