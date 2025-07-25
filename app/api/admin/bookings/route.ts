@@ -16,8 +16,11 @@ export async function GET() {
     }
     return NextResponse.json(bookings, { status: 200 });
   } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error(`[API][/api/admin/bookings] Error: ${errorMsg}`);
-    return NextResponse.json({ error: `Failed to fetch bookings: ${errorMsg}` }, { status: 500 });
+    const err = error as any;
+    const errorMsg = err?.message || String(error);
+    const errorStack = err?.stack || "No stack trace";
+    const errorFull = JSON.stringify(error, Object.getOwnPropertyNames(error));
+    console.error(`[API][/api/admin/bookings] Error:`, { errorMsg, errorStack, errorFull });
+    return NextResponse.json({ error: `Failed to fetch bookings: ${errorMsg}`, debug: errorStack, full: errorFull }, { status: 500 });
   }
 }
