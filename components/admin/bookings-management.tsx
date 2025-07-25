@@ -360,7 +360,7 @@ function BookingsManagement({ initialBookings, error }: BookingsManagementProps)
                       </TableCell>
                       <TableCell>{booking.serviceType}</TableCell>
                       <TableCell>
-                        {format(parseISO(booking.date), "LLL dd, y")} <br />{" "}
+                        {format(parseISO(booking.date), "EEEE, dd MMMM yyyy")} <br />{" "}
                         <span className="text-xs text-muted-foreground">{booking.time}</span>
                       </TableCell>
                       <TableCell>
